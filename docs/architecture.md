@@ -60,11 +60,12 @@ order.
 
 ## Data model (first cut)
 
-- `Restaurant`: owner, slug, contact
-- `MenuVersion`: one extraction run, immutable once published
-- `MenuItem`: name, description, price (decimal), category, confidence fields
-- `ExtractionRun`: prompt version, input hash, raw response, timing, cost
-- `Correction`: field, old value, new value, who, when
+- `Restaurant`: name, slug, owner token hash, table count
+- `MenuVersion`: a draft built from two extraction passes, immutable once published
+- `MenuItem`: name, category, description, price (decimal, empty when unreadable)
+- `ExtractionRun`: pass, prompt version, model, input hash, raw response, timing, token counts
+- `Flag`: field, reason, both pass values, confidence, when it was resolved
+- `Correction`: field, old value, new value, when
 
 `Correction` makes accuracy measurable. From it we get first-pass field
 accuracy, the most common error types, and whether a prompt change helped.
