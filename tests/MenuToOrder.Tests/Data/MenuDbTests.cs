@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MenuToOrder.Tests.Data;
 
-public class MenuDbTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>
+public class MenuDbTests(PostgresFixture postgres)
 {
     private static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

@@ -17,11 +17,7 @@ public sealed class MenuItem
     public MenuItem(Guid menuVersionId, int position, string name, string? category, string? description, decimal? price)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        if (price < 0)
-            throw new ArgumentOutOfRangeException(nameof(price), price, "Price cannot be negative.");
-        // numeric(10,2) would round a third decimal away silently; a price like that is a misread.
-        if (price is { } p && decimal.Round(p, 2) != p)
-            throw new ArgumentOutOfRangeException(nameof(price), price, "Price has more than two decimals.");
+        CheckPrice(price);
 
         MenuVersionId = menuVersionId;
         Position = position;
@@ -29,5 +25,39 @@ public sealed class MenuItem
         Category = category;
         Description = description;
         Price = price;
+    }
+
+    internal void Correct(MenuField field, string value)
+    {
+        switch (field)
+        {
+            case MenuField.Name:
+                ArgumentException.ThrowIfNullOrWhiteSpace(value);
+                Name = value;
+                break;
+            case MenuField.Category:
+                Category = value;
+                break;
+            case MenuField.Description:
+                Description = value;
+                break;
+            default:
+                throw new ArgumentException("Prices are corrected with CorrectPrice.", nameof(field));
+        }
+    }
+
+    internal void CorrectPrice(decimal price)
+    {
+        CheckPrice(price);
+        Price = price;
+    }
+
+    private static void CheckPrice(decimal? price)
+    {
+        if (price < 0)
+            throw new ArgumentOutOfRangeException(nameof(price), price, "Price cannot be negative.");
+        // numeric(10,2) would round a third decimal away silently; a price like that is a misread.
+        if (price is { } p && decimal.Round(p, 2) != p)
+            throw new ArgumentOutOfRangeException(nameof(price), price, "Price has more than two decimals.");
     }
 }

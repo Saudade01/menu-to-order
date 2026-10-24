@@ -2,6 +2,8 @@ using MenuToOrder.Data;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 
+[assembly: AssemblyFixture(typeof(MenuToOrder.Tests.PostgresFixture))]
+
 namespace MenuToOrder.Tests;
 
 public sealed class PostgresFixture : IAsyncLifetime
