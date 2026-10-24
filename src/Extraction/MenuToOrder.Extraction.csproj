@@ -1,2 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MenuToOrder.Tests" />
+  </ItemGroup>
+
 </Project>
