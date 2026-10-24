@@ -1,5 +1,7 @@
 # menu-to-order
 
+[![ci](https://github.com/Saudade01/menu-to-order/actions/workflows/ci.yml/badge.svg)](https://github.com/Saudade01/menu-to-order/actions/workflows/ci.yml)
+
 Turn a photo of a paper menu into a working QR order page.
 
 A restaurant owner photographs the printed menu, the service reads it, and within
