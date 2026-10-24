@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Extraction\MenuToOrder.Extraction.csproj" />
+    <ProjectReference Include="..\Data\MenuToOrder.Data.csproj" />
+  </ItemGroup>
+
+</Project>

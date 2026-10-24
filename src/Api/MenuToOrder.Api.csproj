@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Extraction\MenuToOrder.Extraction.csproj" />
+    <ProjectReference Include="..\Verification\MenuToOrder.Verification.csproj" />
+    <ProjectReference Include="..\Data\MenuToOrder.Data.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Api/MenuToOrder.Api.csproj" />
+    <Project Path="src/Extraction/MenuToOrder.Extraction.csproj" />
+    <Project Path="src/Verification/MenuToOrder.Verification.csproj" />
+    <Project Path="src/Data/MenuToOrder.Data.csproj" />
+  </Folder>
+</Solution>
