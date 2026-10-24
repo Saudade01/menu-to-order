@@ -8,6 +8,7 @@ public enum FlagReason
     PriceUnreadable,
     PriceOutOfRange,
     CurrencyMissing,
+    ForeignCurrency,
     DuplicateName,
     UnknownCategory,
     LowLegibility,
@@ -36,4 +37,6 @@ public sealed class Flag
         SecondPassValue = secondPassValue;
         Confidence = confidence;
     }
+
+    internal void Resolve(DateTimeOffset at) => ResolvedAt ??= at;
 }

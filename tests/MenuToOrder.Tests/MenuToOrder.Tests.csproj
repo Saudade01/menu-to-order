@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Data\MenuToOrder.Data.csproj" />
     <ProjectReference Include="..\..\src\Extraction\MenuToOrder.Extraction.csproj" />
+    <ProjectReference Include="..\..\src\Verification\MenuToOrder.Verification.csproj" />
   </ItemGroup>
 
 </Project>

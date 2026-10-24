@@ -47,8 +47,13 @@ live in configuration so they can be tuned against the correction log.
 | Rule checks | Impossible prices, missing currency, duplicate names |
 | Self-reported legibility | Blur, glare, cropped edges, handwriting |
 
-A field is published only above the configured threshold. The threshold starts
-high and comes down only when the correction log shows it can.
+A field is published only above the configured threshold. The starting weights
+are 0.4 for agreement, 0.4 for rules and 0.2 for legibility, against a threshold
+of 0.9, so any single failing signal sends the field to the owner. The threshold
+comes down only when the correction log shows it can.
+
+Prices printed without a currency are common on Turkish menus. Rather than ask
+about each one, the owner answers once per menu whether its prices are in lira.
 
 ## Why two passes instead of one
 
