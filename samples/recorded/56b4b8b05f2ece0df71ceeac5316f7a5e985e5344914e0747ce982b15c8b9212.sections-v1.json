@@ -1,0 +1,36 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"categories\": [\n    \"ÇORBALAR\",\n    \"ANA YEMEKLER\",\n    \"TATLILAR\",\n    \"İÇECEKLER\"\n  ],\n  \"items\": [\n    {\n      \"name\": \"Mercimek Çorbası\",\n      \"category\": \"ÇORBALAR\",\n      \"description\": null,\n      \"price\": \"95 ₺\",\n      \"unclear\": []\n    },\n    {\n      \"name\": \"Ezogelin Çorbası\",\n      \"category\": \"ÇORBALAR\",\n      \"description\": null,\n      \"price\": \"95 ₺\",\n      \"unclear\": []\n    },\n    {\n      \"name\": \"Tavuk Suyu Çorbası\",\n      \"category\": \"ÇORBALAR\",\n      \"description\": \"Şehriyeli, limonlu\",\n      \"price\": \"110 ₺\",\n      \"unclear\": []\n    },\n    {\n      \"name\": \"Kuru Fasulye\",\n      \"category\": \"ANA YEMEKLER\",\n      \"description\": \"Tereyağlı, pilav ile\",\n      \"price\": \"180 ₺\",\n      \"unclear\": []\n    },\n    {\n      \"name\": \"Karnıyarık\",\n      \"category\": \"ANA YEMEKLER\",\n      \"description\": null,\n      \"price\": \"210 ₺\",\n      \"unclear\": []\n    },\n    {\n      \"name\": \"İzmir Köfte\",\n      \"category\": \"ANA YEMEKLER\",\n      \"description\": null,\n      \"price\": \"240 ₺\",\n      \"unclear\": []\n    },\n    {\n      \"name\": \"Tavuk Sote\",\n      \"category\": \"ANA YEMEKLER\",\n      \"description\": null,\n      \"price\": \"220 ₺\",\n      \"unclear\": []\n    },\n    {\n      \"name\": \"Sütlaç\",\n      \"category\": \"TATLILAR\",\n      \"description\": \"Fırında\",\n      \"price\": \"90 ₺\",\n      \"unclear\": []\n    },\n    {\n      \"name\": \"Kemalpaşa\",\n      \"category\": \"TATLILAR\",\n      \"description\": null,\n      \"price\": \"100 ₺\",\n      \"unclear\": []\n    },\n    {\n      \"name\": \"Ayran\",\n      \"category\": \"İÇECEKLER\",\n      \"description\": null,\n      \"price\": \"35 ₺\",\n      \"unclear\": []\n    },\n    {\n      \"name\": \"Çay\",\n      \"category\": \"İÇECEKLER\",\n      \"description\": null,\n      \"price\": \"20 ₺\",\n      \"unclear\": []\n    }\n  ]\n}",
+            "thoughtSignature": "EswICskIAWkUfRPHXbHTLns0GRYnzg+5+jrVae794lLbUZjMDAY+f4MxzY27jLxZykAq2NMUEQD83rIy1zObSpKSIcHouG07PuqrHxj9YWvX7XlX+aEF6D4S0oL49Y3L/4bgsOB0kfcYIr5W1+mjm5dRUGVYbPydXlvhrXQ54YN/8uXKOYV+OmLb8nw6MxZU5Dhl/DQPAdj8uuzFcSNSepio6yxpcMVZQEEFz1wLwXEzHYdLUDuSyhzrl+HO4GHE0eYu29S6mYYAO2h5N8Dtj5C+fgDtnw0b0h2ePmyM8sHsppFh6TNwQl9AI2ibsoSNs3HWol1m4OyVvv+HgI5vxUrSsziFTcwl1vUlEdrEOoJYmDPE87goAyG5qr32A4xH81VdCU/ZZ47fCFmtk8dtQaE8X0akuaG3VIKHKdZ2adfO08K8HftomS9uk/rJMi3DkK5TE/NxYj1xg7DBGjxVAqbrhTQyJpskDb20D5TEAD1yTyvPyEm7GPmnfT14uiFqVLRY3By5Fz517Z/S4LihJ8YzY3DWNVh2se4Mxr8PjOpzwpkM7eNjf7w7SNdRsxeC2MXCPI7psosQxN19Nt/cEnTJ65STJXjRipSXYQ95e/1ZW2c1cO8C+493xb4a6CX1HeiI8UWrmw9vzxWbAOZthRUEZVC3dWVD962OpBE8cx/Xw3isybkQlnqU6OsLWGJRUIM0VIFJfnOWBtG0nqDzqydnJEwVF6kpayNsUVXi8tSLVo/iAh2dSKsDJ1ALkac0ndPNLs5MIGuaksSgV9DMvJ1psTyMimH1KYZmjxqcQXcZVU0q2bN+WFbtWFuFOhPjnyA9eyvNBVE5SklcO5EjDbygTuziBwA6QQnvUG6btQdWtF/VWDyl5V9apOQIwhf1zIECErnaQP5+K+PPfGlmMqozdtKW605J1c6wxVhC4gf/xFbziN0UknHYailnNo4y7Vu+t6ZWqYh2uqPy2g5Dw/TngX1rMGNHa+zbKGs9u20N/V0mdTRY3tLkzp1iJLRv0fCuAC9WsDPfzxYYrthlfcCC58+kRxT9Gwimx8XqTgpsOef/g71QSRsWOmp7oownEBz4PXj0u/OUQTFkYKQ9ZcNpTLBPyRyM688yyrct6mXELQ3tc6I1gci4bYeR/aVHbSA7YHE5LWYCurnn901nDJADscwjYDlYbQ7VkIrNSkMs/I9mTIyUVmk5Ycm5KCOibYRybNvp+g4HvSWI7D+9DZD0GQxovnztj99xQgq/bKA2X1FL6Ch/QbAX36bnANx7rribyLA+7ly2Btfgc5M1YYobNKsxr3wmZpwedzCIBggUEhjigRF9GJBsaSzH5iqo3EOYwaJqJ0B6v1XGqZo18dAMQWf/ezjf1hskQ/uEJXYPg08WQR6XEU4H0BSnNCSL4QcFG0d+RY8DeMblwitW0vNRWBxO4Gx2SAX6vil5xO8TnL1SWbzQ0b82ij+OfdY="
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 1275,
+    "candidatesTokenCount": 675,
+    "totalTokenCount": 2303,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 183
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1092
+      }
+    ],
+    "thoughtsTokenCount": 353,
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.8-flash",
+  "responseId": "mCDcaqyEGMfFnsEP9vuuuAo"
+}

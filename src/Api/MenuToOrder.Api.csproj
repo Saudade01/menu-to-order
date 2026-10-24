@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <UserSecretsId>428e6f29-26ed-45e2-bb0a-2c2a57c6fc6c</UserSecretsId>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Extraction\MenuToOrder.Extraction.csproj" />
     <ProjectReference Include="..\Verification\MenuToOrder.Verification.csproj" />

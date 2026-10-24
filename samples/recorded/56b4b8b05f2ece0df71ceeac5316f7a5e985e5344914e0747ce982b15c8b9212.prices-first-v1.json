@@ -1,0 +1,36 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\"categories\": [\"ÇORBALAR\", \"ANA YEMEKLER\", \"TATLILAR\", \"İÇECEKLER\"], \"items\": [{\"name\": \"Mercimek Çorbası\", \"category\": \"ÇORBALAR\", \"description\": null, \"price\": \"95 ₺\", \"unclear\": []}, {\"name\": \"Ezogelin Çorbası\", \"category\": \"ÇORBALAR\", \"description\": null, \"price\": \"95 ₺\", \"unclear\": []}, {\"name\": \"Tavuk Suyu Çorbası\", \"category\": \"ÇORBALAR\", \"description\": \"Şehriyeli, limonlu\", \"price\": \"110 ₺\", \"unclear\": []}, {\"name\": \"Kuru Fasulye\", \"category\": \"ANA YEMEKLER\", \"description\": \"Tereyağlı, pilav ile\", \"price\": \"180 ₺\", \"unclear\": []}, {\"name\": \"Karnıyarık\", \"category\": \"ANA YEMEKLER\", \"description\": null, \"price\": \"210 ₺\", \"unclear\": []}, {\"name\": \"İzmir Köfte\", \"category\": \"ANA YEMEKLER\", \"description\": null, \"price\": \"240 ₺\", \"unclear\": []}, {\"name\": \"Tavuk Sote\", \"category\": \"ANA YEMEKLER\", \"description\": null, \"price\": \"220 ₺\", \"unclear\": []}, {\"name\": \"Sütlaç\", \"category\": \"TATLILAR\", \"description\": \"Fırında\", \"price\": \"90 ₺\", \"unclear\": []}, {\"name\": \"Kemalpaşa\", \"category\": \"TATLILAR\", \"description\": null, \"price\": \"100 ₺\", \"unclear\": []}, {\"name\": \"Ayran\", \"category\": \"İÇECEKLER\", \"description\": null, \"price\": \"35 ₺\", \"unclear\": []}, {\"name\": \"Çay\", \"category\": \"İÇECEKLER\", \"description\": null, \"price\": \"20 ₺\", \"unclear\": []}]}",
+            "thoughtSignature": "Ep8ICpwIAWkUfRMVcsNfI53elHUm+H9Qi3SD2rF1KMmu5rrWY/jGHdrhItTf6BB2o0/us+vd/TRYgKn/ellzGBz3XpkxtcffDz3Sr1+cDPdekYnDTjhb3oEDuq1kVRm6PtpRViTohen65bwHAIdvXw6kJ25RFhOg43In+ImWbHLhasIQD4zbb/2R1GQoiW0f9m2vLDDhBKEZJN5jVJPBY45WYsJWaoSZ5GMHc/F/0cCBphvxKhlJqI3D7jdB5lg4gw3CIN3lSsOTy6NE230cT0OzUyBHnUF71yU7pr6Co/0z/CwZ0D0sDkTNzBUd/y9dlAlmiw0kHdiP5MA3f5r6R2IAhgi9j155ksVyyqdAXjocS5Qdin59aRCHiQCqhBacOKTMHP54vW5tP+e85rd2Fh39rdwYCxOmMQJi0qtSCTG1XOxHxqH6vjU61nQ6gN//0B49I1A8QhCSuBX15kltgi9xMR2v7UErv4S7sz34OR1mkq88GDhnAyfKWc5K5BWFjg5X/O8tBmUJATmPRkUcxzGNTawuQKmdfLOBfvUDKU5sqEr9nlh8FnZcbHuijFElk1KgjFPDsbFeNjsf3tnmR/IUOO/Do8KVbCHG65Pcw1PX4/VmB3p65r7rjGVhJ2RAcG3T1XaqGPKTmm/sP8fsFXDs8ZS/uZUChWCY8puwvvpViqIJ4l+aDfB/IzC9kt47md8+dfENeqWeyu2T1xCQQUhHK0fyQYq7yrjqS23z8puA8sxfYhfHN/AMAE8AAeRjZTRfLBNXy+vjysDwkyboTy+veYf3HoHGHj6Z4KOqE0f0wQUL/7S14A4aCyogMVQzUM5QDFJL8xJvdWl7xYFu99vosAgW1qTHVQtzzIrzJZnZIvsG4lEETYkRpQ1XO3OeTasd7xp/nxZIrNnfsdo2CMgWInGFtZOfieAwRJ3Z9EELMHemCVrqrLg4Pu+MASEWg4vy6DlIyBA6QfKwM2wMHvxdDLY99y3uVoISuXbjz04FhapjeUyK40A3ljaUNXiE2ecakKNRuwYCATLnGTphqXa2FIDIkuN7kzknIvq1JvwSpHPw8bww2KfwV2dYUKp4FZVcKJ8W1G+9IY1sHvlAM55G8KzrK6q0C3DCKNqHuSIwjJ5WjrmErMTVl0PfcA7u9KknvfaqK2+xrTY48xngRLB748U7lwFlOEERxgqqqmn6goafNLq8zn2DZdJR81ZESzX3j8R8sAr6SJVTqkVBkruhRc08W0x0KR7402anrY1zLACElqLyJ3+Lw/n42YoLwCDU8m9pP6s3CSwdbP6oLzLQxS5/Obi7D2RuRzyPIPYpv24n3p4zCvnPlAR7VwmXGNIrLAevzcM5h0TbRFRnQGACsHc1pfAU1nCl8c5M+AMN1YE0Hq6kcVV3OBKcapaY3t0="
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 1301,
+    "candidatesTokenCount": 487,
+    "totalTokenCount": 2124,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 209
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1092
+      }
+    ],
+    "thoughtsTokenCount": 336,
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.8-flash",
+  "responseId": "uyDcapyECJrbxs0PyuW-uAI"
+}
