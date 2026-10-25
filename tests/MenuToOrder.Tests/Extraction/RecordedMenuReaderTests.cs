@@ -17,7 +17,7 @@ public class RecordedMenuReaderTests
 
         Assert.Null(read.Error);
         Assert.Equal("gemini-3.8-flash (recorded)", read.Model);
-        Assert.Equal("sections-v1", read.PromptVersion);
+        Assert.Equal("sections-v2", read.PromptVersion);
         Assert.Equal(11, read.Menu!.Items.Count);
     }
 
@@ -27,6 +27,6 @@ public class RecordedMenuReaderTests
         var read = await _reader.ReadAsync(new MenuImage([1, 2, 3], "image/jpeg"), 2, Ct);
 
         Assert.Null(read.Menu);
-        Assert.Equal("No recorded response for this image under prompt prices-first-v1.", read.Error);
+        Assert.Equal("No recorded response for this image under prompt prices-first-v2.", read.Error);
     }
 }

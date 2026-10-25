@@ -1,4 +1,5 @@
 using MenuToOrder.Data;
+using MenuToOrder.Extraction;
 using MenuToOrder.Verification;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,7 +29,7 @@ public class GateTests(PostgresFixture postgres)
         await using var db = postgres.CreateDb();
         var outcome = await Gate(db).PublishAsync(draft.Version.Id, Ct);
 
-        Assert.Equal(new PublishOutcome.Blocked("6 alan hâlâ sizin onayınızı bekliyor."), outcome);
+        Assert.Equal(new PublishOutcome.Blocked("7 alan hâlâ sizin onayınızı bekliyor."), outcome);
         Assert.Equal(MenuStatus.Draft, (await db.MenuVersions.SingleAsync(v => v.Id == draft.Version.Id, Ct)).Status);
     }
 
@@ -48,6 +49,7 @@ public class GateTests(PostgresFixture postgres)
             foreach (var duplicate in flags.Where(f => f.Reason == FlagReason.DuplicateName))
                 Assert.IsType<ReviewOutcome.Done>(await review.ConfirmAsync(duplicate.Id, Ct));
             Assert.IsType<ReviewOutcome.Done>(await review.ConfirmLiraAsync(draft.Version.Id, Ct));
+            Assert.IsType<ReviewOutcome.Done>(await review.ConfirmAsync(Flag("Serpme Kahvaltı (2 kişilik)", FlagReason.PassesDisagree), Ct));
         }
 
         await using var check = postgres.CreateDb();
@@ -90,9 +92,12 @@ public class GateTests(PostgresFixture postgres)
     [Fact]
     public async Task Confirming_a_field_answers_every_flag_on_it()
     {
-        var draft = await Save("sahil-kafe");
-        var limonata = draft.Items.Single(i => i.Name == "Limonata");
-        var flags = draft.Flags.Where(f => f.MenuItemId == limonata.Id).ToList();
+        static MenuRead Read(int pass, string price) => new(pass, "test", "test", "hash", "{}",
+            new ExtractedMenu(["İÇECEKLER"], [new ExtractedItem("Su", "İÇECEKLER", null, price, [])]),
+            null, TimeSpan.Zero, null, null, DateTimeOffset.UtcNow);
+        var (_, draft) = await Samples.Save(postgres,
+            id => Task.FromResult(Drafts.Build(id, Read(1, "5 TL"), Read(2, "8 TL"), new VerificationOptions(), DateTimeOffset.UtcNow)), Ct);
+        var flags = draft.Flags.ToList();
 
         await using var db = postgres.CreateDb();
         await new Review(db, TimeProvider.System).ConfirmAsync(flags[0].Id, Ct);
@@ -100,6 +105,20 @@ public class GateTests(PostgresFixture postgres)
         var ids = flags.Select(f => f.Id).ToList();
         Assert.Equal(2, ids.Count);
         Assert.All(await db.Flags.Where(f => ids.Contains(f.Id)).ToListAsync(Ct), f => Assert.NotNull(f.ResolvedAt));
+    }
+
+    [Fact]
+    public async Task A_dollar_price_cannot_be_waved_through_as_lira()
+    {
+        var draft = await Save("sahil-kafe");
+        var limonata = draft.Flags.First(f => f.Reason == FlagReason.ForeignCurrency);
+
+        await using var db = postgres.CreateDb();
+        var review = new Review(db, TimeProvider.System);
+
+        Assert.IsType<ReviewOutcome.Rejected>(await review.ConfirmAsync(limonata.Id, Ct));
+        Assert.IsType<ReviewOutcome.Rejected>(await review.CorrectAsync(limonata.Id, "$4", Ct));
+        Assert.IsType<ReviewOutcome.Done>(await review.CorrectAsync(limonata.Id, "60", Ct));
     }
 
     private static VerificationGate Gate(MenuDb db) => new(db, TimeProvider.System);

@@ -1,0 +1,36 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\"categories\":[\"KEBAPLAR\",\"PIDE & LAHMACUN\",\"MEZELER\"],\"items\":[{\"name\":\"Adana Kebap\",\"category\":\"KEBAPLAR\",\"description\":null,\"price\":\"380 ₺\",\"unclear\":[]},{\"name\":\"Urfa Kebap\",\"category\":\"KEBAPLAR\",\"description\":null,\"price\":\"380 ₺\",\"unclear\":[]},{\"name\":\"Beyti Sarma\",\"category\":\"KEBAPLAR\",\"description\":\"Yoğurt ve domates sosu ile\",\"price\":\"420 ₺\",\"unclear\":[]},{\"name\":\"Kuzu Şiş\",\"category\":\"KEBAPLAR\",\"description\":null,\"price\":\"460 ₺\",\"unclear\":[]},{\"name\":\"Lahmacun\",\"category\":\"PIDE & LAHMACUN\",\"description\":null,\"price\":\"120 ₺\",\"unclear\":[]},{\"name\":\"Kıymalı Pide\",\"category\":\"PIDE & LAHMACUN\",\"description\":null,\"price\":\"260 ₺\",\"unclear\":[]},{\"name\":\"Kaşarlı Pide\",\"category\":\"PIDE & LAHMACUN\",\"description\":null,\"price\":\"240 ₺\",\"unclear\":[]},{\"name\":\"Haydari\",\"category\":\"MEZELER\",\"description\":null,\"price\":\"110 ₺\",\"unclear\":[\"price\"]},{\"name\":\"Acılı Ezme\",\"category\":\"MEZELER\",\"description\":null,\"price\":\"100 ₺\",\"unclear\":[\"price\"]},{\"name\":\"Humus\",\"category\":\"MEZELER\",\"description\":null,\"price\":\"130 ₺\",\"unclear\":[\"price\"]}]}",
+            "thoughtSignature": "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"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 1322,
+    "candidatesTokenCount": 346,
+    "totalTokenCount": 2721,
+    "promptTokensDetails": [
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1092
+      },
+      {
+        "modality": "TEXT",
+        "tokenCount": 230
+      }
+    ],
+    "thoughtsTokenCount": 1053,
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.8-flash",
+  "responseId": "SmzdasiiK7GCvdIPw_6ewAI"
+}

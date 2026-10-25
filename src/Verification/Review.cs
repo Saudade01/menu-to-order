@@ -23,6 +23,9 @@ public sealed class Review(MenuDb db, TimeProvider time)
             return outcome;
         if (flag!.Field == MenuField.Price && item!.Price is null)
             return new ReviewOutcome.Rejected("Onaylanacak bir fiyat yok, lütfen fiyatı yazın.");
+        // "$4" is stored as 4; confirming it would sell the dish for 4 lira.
+        if (item!.Flags.Any(f => f.Field == flag.Field && f.ResolvedAt is null && f.Reason == FlagReason.ForeignCurrency))
+            return new ReviewOutcome.Rejected("Bu fiyat TL değil. Lütfen TL fiyatını yazın.");
 
         var now = time.GetUtcNow();
         foreach (var f in item!.Flags.Where(f => f.Field == flag.Field))
@@ -44,7 +47,10 @@ public sealed class Review(MenuDb db, TimeProvider time)
         string? old;
         if (flag!.Field == MenuField.Price)
         {
-            var amount = PriceText.Parse(value).Amount;
+            var parsed = PriceText.Parse(value);
+            if (parsed.Currency == Currency.Other)
+                return new ReviewOutcome.Rejected("Fiyatı TL olarak yazın.");
+            var amount = parsed.Amount;
             if (amount is null)
                 return new ReviewOutcome.Rejected("Bu fiyat okunamadı. 180 ya da 185,50 gibi yazın.");
 

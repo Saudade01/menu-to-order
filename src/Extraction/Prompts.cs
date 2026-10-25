@@ -17,7 +17,9 @@ public static class Prompts
         For every dish, return:
         - name: the dish name exactly as printed
         - category: the section heading it sits under, or null if there is none
-        - description: the smaller text printed with the dish, or null
+        - description: the smaller text printed with the dish, or null. Include any note on when it
+          is served or how it comes, such as "Cuma günleri" or "porsiyon", even if it is written
+          above the dish or next to its section heading.
         - price: the price exactly as printed, including any currency sign or letters such as ₺ or TL.
           Use null if no price is printed or it cannot be read.
         - unclear: the fields you could not read with confidence because of blur, glare,
@@ -29,7 +31,7 @@ public static class Prompts
         """;
 
     // The passes read in different orders on purpose: where they disagree is where the photo is ambiguous.
-    private static readonly Prompt BySection = new("sections-v1", $"""
+    private static readonly Prompt BySection = new("sections-v2", $"""
         This is a photo of a printed restaurant menu, usually in Turkish.
 
         Read it section by section, top to bottom.
@@ -37,7 +39,7 @@ public static class Prompts
         {Fields}
         """);
 
-    private static readonly Prompt ByPrice = new("prices-first-v1", $"""
+    private static readonly Prompt ByPrice = new("prices-first-v2", $"""
         This is a photo of a printed restaurant menu, usually in Turkish.
 
         Start from the prices. Find every price printed on the menu and follow its line to the dish

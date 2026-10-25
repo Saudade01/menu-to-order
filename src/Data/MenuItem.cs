@@ -36,10 +36,10 @@ public sealed class MenuItem
                 Name = value;
                 break;
             case MenuField.Category:
-                Category = value;
+                Category = string.IsNullOrWhiteSpace(value) ? null : value;
                 break;
             case MenuField.Description:
-                Description = value;
+                Description = string.IsNullOrWhiteSpace(value) ? null : value;
                 break;
             default:
                 throw new ArgumentException("Prices are corrected with CorrectPrice.", nameof(field));

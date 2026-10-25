@@ -1,0 +1,36 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\"categories\":[\"KAHVALTI\",\"IZGARA\",\"TATLI\",\"SOĞUK İÇECEK\"],\"items\":[{\"name\":\"Serpme Kahvaltı (2 kişilik)\",\"category\":\"KAHVALTI\",\"description\":null,\"price\":\"1.250,00 TL\",\"unclear\":[]},{\"name\":\"Menemen\",\"category\":\"KAHVALTI\",\"description\":null,\"price\":\"185,50 TL\",\"unclear\":[]},{\"name\":\"Sucuklu Yumurta\",\"category\":\"KAHVALTI\",\"description\":null,\"price\":\"210 TL\",\"unclear\":[]},{\"name\":\"Köfte\",\"category\":\"IZGARA\",\"description\":null,\"price\":\"Yarım 180 / Tam 320\",\"unclear\":[]},{\"name\":\"Tavuk Şiş\",\"category\":\"IZGARA\",\"description\":null,\"price\":\"290\",\"unclear\":[]},{\"name\":\"Günün Balığı\",\"category\":\"IZGARA\",\"description\":null,\"price\":\"Sorunuz\",\"unclear\":[]},{\"name\":\"Köfte\",\"category\":\"IZGARA\",\"description\":\"Kaşarlı\",\"price\":\"330 TL\",\"unclear\":[]},{\"name\":\"Künefe\",\"category\":\"TATLI\",\"description\":null,\"price\":\"240 TL\",\"unclear\":[]},{\"name\":\"Sufle\",\"category\":\"TATLI\",\"description\":null,\"price\":\"175 TL\",\"unclear\":[]},{\"name\":\"Limonata\",\"category\":\"SOĞUK İÇECEK\",\"description\":null,\"price\":\"$4\",\"unclear\":[]},{\"name\":\"Soda\",\"category\":\"SOĞUK İÇECEK\",\"description\":null,\"price\":\"40 TL\",\"unclear\":[]}]}",
+            "thoughtSignature": "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"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 1322,
+    "candidatesTokenCount": 361,
+    "totalTokenCount": 2443,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 230
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1092
+      }
+    ],
+    "thoughtsTokenCount": 760,
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.8-flash",
+  "responseId": "TGvdat2VPPajxN8PkYPKiQ8"
+}

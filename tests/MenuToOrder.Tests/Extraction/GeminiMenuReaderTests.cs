@@ -28,7 +28,7 @@ public class GeminiMenuReaderTests
         Assert.Equal(Prompts.For(2).Text, parts[1].GetProperty("text").GetString());
         Assert.Equal(JsonValueKind.Object, body.RootElement.GetProperty("generationConfig").GetProperty("responseSchema").ValueKind);
 
-        Assert.Equal("prices-first-v1", read.PromptVersion);
+        Assert.Equal("prices-first-v2", read.PromptVersion);
         Assert.Equal(recorded, read.RawResponse);
         Assert.Equal(11, read.Menu!.Items.Count);
     }

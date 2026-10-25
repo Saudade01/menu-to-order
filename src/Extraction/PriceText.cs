@@ -49,10 +49,10 @@ public static partial class PriceText
             NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var amount) ? amount : null;
     }
 
-    [GeneratedRegex(@"₺|\bTL\b|\bTRY\b", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"₺|(?<!\p{L})(TL|TRY)(?!\p{L})", RegexOptions.IgnoreCase)]
     private static partial Regex Lira();
 
-    [GeneratedRegex(@"[$€£]|\b(USD|EUR|GBP)\b", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"[$€£]|(?<!\p{L})(USD|EUR|GBP)(?!\p{L})", RegexOptions.IgnoreCase)]
     private static partial Regex Foreign();
 
     [GeneratedRegex(@"\d+(?:[.,]\d+)*")]

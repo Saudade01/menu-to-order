@@ -27,8 +27,8 @@ public static partial class Drafts
         {
             var v = a ?? b!;
             var price = PriceText.Parse(v.PriceText);
-            var item = new MenuItem(version.Id, items.Count, string.IsNullOrWhiteSpace(v.Name) ? "(no name)" : v.Name.Trim(),
-                v.Category, v.Description, price.Amount);
+            var item = new MenuItem(version.Id, items.Count, string.IsNullOrWhiteSpace(v.Name) ? "(no name)" : Clean(v.Name),
+                v.Category is null ? null : Clean(v.Category), v.Description is null ? null : Clean(v.Description), price.Amount);
             items.Add(item);
 
             foreach (var field in Enum.GetValues<MenuField>())
@@ -77,7 +77,8 @@ public static partial class Drafts
             case MenuField.Name when nameCounts[(Key(v.Category), Key(v.Name))] > 1:
                 yield return FlagReason.DuplicateName;
                 break;
-            case MenuField.Category when v.Category is null || !detected.Contains(Key(v.Category)):
+            // A dish printed outside any heading is fine; only a heading the menu does not have is suspicious.
+            case MenuField.Category when v.Category is not null && !detected.Contains(Key(v.Category)):
                 yield return FlagReason.UnknownCategory;
                 break;
         }
@@ -91,8 +92,53 @@ public static partial class Drafts
         var pairs = new List<(ExtractedItem? First, ExtractedItem? Second)>();
         foreach (var (key, item) in Keyed(first))
             pairs.Add((item, unmatched.Remove(key, out var match) ? match : null));
-        pairs.AddRange(Keyed(second).Where(x => unmatched.ContainsKey(x.Key)).Select(x => ((ExtractedItem?)null, (ExtractedItem?)x.Item)));
+
+        // The passes can file the same dish under different headings. It is still one dish,
+        // so pair the leftovers by name and let the section disagreement be flagged instead.
+        var leftovers = Keyed(second).Where(x => unmatched.ContainsKey(x.Key)).Select(x => x.Item).ToList();
+        Adopt(pairs, leftovers, (a, b) => Key(a.Name) == Key(b.Name));
+
+        // A slip of a letter or two ("kişilik" read as "kiőilik") must not split one dish into two.
+        // The names still differ, so the name gets flagged with both readings.
+        Adopt(pairs, leftovers, (a, b) => Key(a.Category) == Key(b.Category) && Close(Key(a.Name), Key(b.Name)));
+
+        pairs.AddRange(leftovers.Select(s => ((ExtractedItem?)null, (ExtractedItem?)s)));
         return pairs;
+    }
+
+    private static void Adopt(List<(ExtractedItem? First, ExtractedItem? Second)> pairs, List<ExtractedItem> leftovers,
+        Func<ExtractedItem, ExtractedItem, bool> match)
+    {
+        for (var i = 0; i < pairs.Count; i++)
+        {
+            if (pairs[i].Second is not null)
+                continue;
+            var found = leftovers.FirstOrDefault(s => match(pairs[i].First!, s));
+            if (found is null)
+                continue;
+            leftovers.Remove(found);
+            pairs[i] = (pairs[i].First, found);
+        }
+    }
+
+    private static bool Close(string a, string b) => Distance(a, b) <= Math.Max(1, Math.Min(a.Length, b.Length) / 10);
+
+    private static int Distance(string a, string b)
+    {
+        var row = Enumerable.Range(0, b.Length + 1).ToArray();
+        for (var i = 1; i <= a.Length; i++)
+        {
+            var diagonal = row[0];
+            row[0] = i;
+            for (var j = 1; j <= b.Length; j++)
+            {
+                var above = row[j];
+                row[j] = Math.Min(Math.Min(row[j] + 1, row[j - 1] + 1), diagonal + (a[i - 1] == b[j - 1] ? 0 : 1));
+                diagonal = above;
+            }
+        }
+
+        return row[b.Length];
     }
 
     private static IEnumerable<((string, string, int) Key, ExtractedItem Item)> Keyed(IReadOnlyList<ExtractedItem> items)
@@ -108,6 +154,9 @@ public static partial class Drafts
 
     private static bool Same(MenuField field, ExtractedItem a, ExtractedItem b)
     {
+        // Descriptions carry no money; "ANAYEMEK" against "ANA YEMEK" is not worth the owner's time.
+        if (field == MenuField.Description)
+            return LettersOnly(Text(a, field)) == LettersOnly(Text(b, field));
         if (field != MenuField.Price)
             return Key(Text(a, field)) == Key(Text(b, field));
 
@@ -126,7 +175,12 @@ public static partial class Drafts
         _ => item?.PriceText,
     };
 
-    private static string Key(string? s) => Whitespace().Replace(s?.Trim() ?? "", " ").ToUpper(Turkish);
+    // Models sometimes spell "ş" as "s" plus a combining cedilla; NFC makes both forms the same text.
+    private static string Clean(string s) => Whitespace().Replace(s.Normalize().Trim(), " ");
+
+    private static string Key(string? s) => Clean(s ?? "").ToUpper(Turkish);
+
+    private static string LettersOnly(string? s) => string.Concat(Key(s).Where(char.IsLetterOrDigit));
 
     private static ExtractionRun Run(MenuVersion version, MenuRead read) => new(
         version.Id, read.Pass, read.PromptVersion, read.Model, read.InputHash, read.RawResponse, read.Error,

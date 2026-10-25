@@ -38,10 +38,10 @@ public class DraftTests
         Assert.Equal(
             new HashSet<(string, MenuField, FlagReason)>
             {
+                ("Serpme Kahvaltı (2 kişilik)", MenuField.Name, FlagReason.PassesDisagree),
                 ("Köfte", MenuField.Name, FlagReason.DuplicateName),
                 ("Köfte", MenuField.Price, FlagReason.PriceUnreadable),
                 ("Tavuk Şiş", MenuField.Price, FlagReason.CurrencyMissing),
-                ("Günün Balığı", MenuField.Price, FlagReason.PassesDisagree),
                 ("Günün Balığı", MenuField.Price, FlagReason.PriceUnreadable),
                 ("Limonata", MenuField.Price, FlagReason.PriceOutOfRange),
                 ("Limonata", MenuField.Price, FlagReason.ForeignCurrency),
@@ -94,6 +94,80 @@ public class DraftTests
         var draft = Build(first, first with { Pass = 2 });
 
         Assert.Equal(("Ayran", MenuField.Category, FlagReason.UnknownCategory), Assert.Single(draft.Described()));
+    }
+
+    [Fact]
+    public void A_dish_filed_under_different_sections_stays_one_dish()
+    {
+        var draft = Build(
+            Read(1, new ExtractedItem("Sosis Tabağı", "IZGARALAR", null, "280 TL", [])),
+            Read(2, new ExtractedItem("Sosis Tabağı", null, null, "280 TL", [])) with
+            {
+                Menu = new ExtractedMenu(["IZGARALAR"], [new ExtractedItem("Sosis Tabağı", null, null, "280 TL", [])]),
+            });
+
+        Assert.Single(draft.Items);
+        Assert.Equal(("Sosis Tabağı", MenuField.Category, FlagReason.PassesDisagree), Assert.Single(draft.Described()));
+    }
+
+    [Fact]
+    public void A_name_misread_by_a_letter_stays_one_dish_with_both_readings()
+    {
+        var draft = Build(Read(1, Item("Serpme Kahvaltı (2 kişilik)", "1.250,00 TL")),
+            Read(2, Item("Serpme Kahvaltı (2 kiőilik)", "1.250,00 TL")));
+
+        var flag = Assert.Single(draft.Flags);
+        Assert.Single(draft.Items);
+        Assert.Equal((MenuField.Name, "Serpme Kahvaltı (2 kişilik)", "Serpme Kahvaltı (2 kiőilik)"),
+            (flag.Field, flag.FirstPassValue, flag.SecondPassValue));
+    }
+
+    [Fact]
+    public void The_same_letters_in_a_different_unicode_form_are_the_same_name()
+    {
+        var draft = Build(Read(1, Item("Tavuk \u015Ei\u015F", "290 TL")), Read(2, Item("Tavuk \u015Eis\u0327", "290 TL")));
+
+        Assert.Empty(draft.Flags);
+        Assert.Equal("Tavuk Şiş", Assert.Single(draft.Items).Name);
+    }
+
+    [Fact]
+    public void Different_dishes_are_not_forced_together()
+    {
+        var draft = Build(Read(1, Item("Künefe", "240 TL")), Read(2, Item("Sufle", "175 TL")));
+
+        Assert.Equal(2, draft.Items.Count);
+    }
+
+    [Fact]
+    public void A_dish_printed_outside_any_heading_is_not_questioned()
+    {
+        var loose = new ExtractedItem("Menemen", null, null, "160 TL", []);
+        var read = Read(1, loose) with { Menu = new ExtractedMenu(["İÇECEKLER"], [loose]) };
+
+        Assert.Empty(Build(read, read with { Pass = 2 }).Flags);
+    }
+
+    [Theory]
+    [InlineData("15 TL", false)]
+    [InlineData("4 TL", true)]
+    [InlineData("12.500 TL", true)]
+    public void Prices_outside_ten_to_ten_thousand_lira_are_questioned(string price, bool flagged)
+    {
+        var read = Read(1, Item("Su", price));
+
+        Assert.Equal(flagged, Build(read, read with { Pass = 2 }).Flags.Any(f => f.Reason == FlagReason.PriceOutOfRange));
+    }
+
+    [Theory]
+    [InlineData("ÇORBA + ANAYEMEK + PİLAV", "ÇORBA + ANA YEMEK + PİLAV", false)]
+    [InlineData("Kaşarlı", "Kaşarsız", true)]
+    public void Descriptions_that_differ_only_in_spacing_are_not_questioned(string first, string second, bool flagged)
+    {
+        var draft = Build(Read(1, Item("Günün Menüsü", "170 TL") with { Description = first }),
+            Read(2, Item("Günün Menüsü", "170 TL") with { Description = second }));
+
+        Assert.Equal(flagged, draft.Flags.Any(f => f.Field == MenuField.Description));
     }
 
     private static MenuDraft Build(MenuRead first, MenuRead second) =>

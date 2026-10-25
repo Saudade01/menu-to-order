@@ -16,10 +16,13 @@ internal static class Samples
             new VerificationOptions(), DateTimeOffset.UtcNow);
     }
 
-    public static async Task<(Restaurant Restaurant, MenuDraft Draft)> Save(PostgresFixture postgres, string sample, CancellationToken ct)
+    public static async Task<(Restaurant Restaurant, MenuDraft Draft)> Save(PostgresFixture postgres, string sample, CancellationToken ct) =>
+        await Save(postgres, id => Draft(id, sample, ct), ct);
+
+    public static async Task<(Restaurant Restaurant, MenuDraft Draft)> Save(PostgresFixture postgres, Func<Guid, Task<MenuDraft>> build, CancellationToken ct)
     {
         var restaurant = new Restaurant("Test", $"test-{Guid.NewGuid():N}", RandomNumberGenerator.GetBytes(32), 4, DateTimeOffset.UtcNow);
-        var draft = await Draft(restaurant.Id, sample, ct);
+        var draft = await build(restaurant.Id);
 
         await using var db = postgres.CreateDb();
         db.Add(restaurant);
