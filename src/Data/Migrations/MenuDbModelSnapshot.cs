@@ -202,6 +202,9 @@ namespace MenuToOrder.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ClientKey")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -224,6 +227,9 @@ namespace MenuToOrder.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("MenuVersionId");
+
+                    b.HasIndex("RestaurantId", "ClientKey")
+                        .IsUnique();
 
                     b.HasIndex("RestaurantId", "CreatedAt");
 

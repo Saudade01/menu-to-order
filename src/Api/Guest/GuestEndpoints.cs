@@ -11,12 +11,12 @@ public static class GuestEndpoints
         var table = app.MapGroup("/m/{slug}/{table:int}");
 
         table.MapGet("/", async (string slug, int table, MenuDb db, CancellationToken ct) =>
-            await Load(db, slug, table, ct) is { } open ? Menu(open, null) : Results.NotFound());
+            await Load(db, slug, table, ct) is { } open ? Menu(open, null) : Unavailable());
 
         table.MapPost("/cart", async (string slug, int table, HttpRequest request, MenuDb db, TimeProvider time, CancellationToken ct) =>
         {
             if (await Load(db, slug, table, ct) is not { } open)
-                return Results.NotFound();
+                return Unavailable();
 
             var (order, error) = await Priced(open, request, time, ct);
             return order is null
@@ -27,16 +27,32 @@ public static class GuestEndpoints
         table.MapPost("/orders", async (string slug, int table, HttpRequest request, MenuDb db, TimeProvider time, CancellationToken ct) =>
         {
             if (await Load(db, slug, table, ct) is not { } open)
-                return Results.NotFound();
+                return Unavailable();
 
             var (order, error) = await Priced(open, request, time, ct);
             if (order is null)
                 return Menu(open, error);
 
-            db.Orders.Add(order);
-            await db.SaveChangesAsync(ct);
-            // Redirect so refreshing the receipt cannot send the same order twice.
-            return Results.Redirect($"/m/{slug}/{table}/orders/{order.Id}");
+            // A second tap, or a retry on a slow connection, brings the same key: answer with the order already placed.
+            Task<Order?> Placed() => db.Orders.AsNoTracking()
+                .SingleOrDefaultAsync(o => o.RestaurantId == order.RestaurantId && o.ClientKey == order.ClientKey && o.ClientKey != null, ct);
+
+            if (await Placed() is { } earlier)
+                return Receipt(slug, table, earlier);
+            try
+            {
+                db.Orders.Add(order);
+                await db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException)
+            {
+                // Both taps passed the check at once; the unique key let only one in.
+                if (await Placed() is { } raced)
+                    return Receipt(slug, table, raced);
+                throw;
+            }
+
+            return Receipt(slug, table, order);
         });
 
         table.MapGet("/orders/{id:guid}", async (string slug, int table, Guid id, MenuDb db, CancellationToken ct) =>
@@ -44,7 +60,7 @@ public static class GuestEndpoints
             var order = await db.Orders.Include(o => o.Lines.OrderBy(l => l.Position)).SingleOrDefaultAsync(o => o.Id == id && o.TableNumber == table, ct);
             var restaurant = order is null ? null : await db.Restaurants.SingleOrDefaultAsync(r => r.Id == order.RestaurantId && r.Slug == slug, ct);
             return restaurant is null
-                ? Results.NotFound()
+                ? Unavailable()
                 : new RazorComponentResult<ReceiptPage>(new { Restaurant = restaurant, Order = order });
         });
     }
@@ -73,9 +89,15 @@ public static class GuestEndpoints
             return (null, error);
 
         return Guid.TryParse(form["menu"], out var seen)
-            ? Checkout.Price(open.Menu, open.Menu.Items, seen, cart, open.Table, form["note"], time.GetUtcNow())
+            ? Checkout.Price(open.Menu, open.Menu.Items, seen, cart, open.Table, form["note"], time.GetUtcNow(),
+                Guid.TryParse(form["key"], out var key) ? key : null)
             : (null, Checkout.MenuChanged);
     }
+
+    // Redirect so refreshing the receipt cannot send the same order twice.
+    private static IResult Receipt(string slug, int table, Order order) => Results.Redirect($"/m/{slug}/{table}/orders/{order.Id}");
+
+    private static IResult Unavailable() => new RazorComponentResult<UnavailablePage> { StatusCode = StatusCodes.Status404NotFound };
 
     private static IResult Menu(OpenTable open, string? notice) =>
         new RazorComponentResult<MenuPage>(new { open.Restaurant, open.Table, open.Menu, Notice = notice })

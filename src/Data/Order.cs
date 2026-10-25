@@ -14,13 +14,16 @@ public sealed class Order
     public string? Note { get; private set; }
     public decimal Total { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+    // Issued with the cart page, so a second tap on "order" finds this order instead of placing another.
+    public Guid? ClientKey { get; private set; }
     public IReadOnlyList<OrderLine> Lines => _lines;
 
     // The total is worked out here from the menu's own prices, never taken from the guest.
     public Order(Guid restaurantId, Guid menuVersionId, int tableNumber, string? note,
-        IEnumerable<(MenuItem Item, int Quantity)> lines, DateTimeOffset createdAt)
+        IEnumerable<(MenuItem Item, int Quantity)> lines, DateTimeOffset createdAt, Guid? clientKey = null)
         : this(restaurantId, menuVersionId, tableNumber, note, 0m, createdAt)
     {
+        ClientKey = clientKey;
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tableNumber);
         if (note?.Length > MaxNoteLength)
             throw new ArgumentOutOfRangeException(nameof(note), $"A note is at most {MaxNoteLength} characters.");

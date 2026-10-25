@@ -3,6 +3,16 @@
         <h1>@Restaurant.Name</h1>
         <p class="lead">Her masa için bir kod. Sayfayı yazdırıp kartları kesin.</p>
         <p><a href="/o/@Token/review">Menüye dön</a> · <a href="/o/@Token/orders">Siparişler</a></p>
+        @if (Notice is not null)
+        {
+            <p class="notice">@Notice</p>
+        }
+        <form method="post" action="/o/@Token/tables" class="row">
+            <AntiforgeryToken />
+            <label for="tables" class="reads" style="margin:0">Masa sayısı</label>
+            <input id="tables" name="tables" type="number" min="1" max="100" value="@Restaurant.TableCount" style="flex:0 0 90px" />
+            <button type="submit" class="quiet">Güncelle</button>
+        </form>
     </div>
 
     <div class="qr">
@@ -21,4 +31,5 @@
     [Parameter, EditorRequired] public string Token { get; set; } = "";
     [Parameter, EditorRequired] public Restaurant Restaurant { get; set; } = null!;
     [Parameter, EditorRequired] public List<QrCode> Codes { get; set; } = [];
+    [Parameter] public string? Notice { get; set; }
 }

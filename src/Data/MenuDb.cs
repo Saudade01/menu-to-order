@@ -41,6 +41,7 @@ public sealed class MenuDb(DbContextOptions<MenuDb> options) : DbContext(options
             o.HasOne<Restaurant>().WithMany().HasForeignKey(x => x.RestaurantId).OnDelete(DeleteBehavior.Restrict);
             o.HasOne<MenuVersion>().WithMany().HasForeignKey(x => x.MenuVersionId).OnDelete(DeleteBehavior.Restrict);
             o.HasIndex(x => new { x.RestaurantId, x.CreatedAt });
+            o.HasIndex(x => new { x.RestaurantId, x.ClientKey }).IsUnique();
         });
         model.Entity<OrderLine>().HasOne<MenuItem>().WithMany().HasForeignKey(l => l.MenuItemId).OnDelete(DeleteBehavior.Restrict);
     }

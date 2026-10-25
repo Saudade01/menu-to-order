@@ -24,7 +24,7 @@ public static class Checkout
     }
 
     public static (Order? Order, string? Error) Price(MenuVersion menu, IEnumerable<MenuItem> items, Guid seenMenuId,
-        IReadOnlyDictionary<Guid, int> cart, int table, string? note, DateTimeOffset now)
+        IReadOnlyDictionary<Guid, int> cart, int table, string? note, DateTimeOffset now, Guid? key = null)
     {
         var byId = items.ToDictionary(i => i.Id);
         if (seenMenuId != menu.Id || cart.Keys.Any(id => !byId.ContainsKey(id)))
@@ -35,6 +35,6 @@ public static class Checkout
             return (null, $"Not en fazla {Order.MaxNoteLength} karakter olabilir.");
 
         var lines = cart.Select(c => (byId[c.Key], c.Value)).OrderBy(l => l.Item1.Position);
-        return (new Order(menu.RestaurantId, menu.Id, table, note, lines, now), null);
+        return (new Order(menu.RestaurantId, menu.Id, table, note, lines, now, key), null);
     }
 }

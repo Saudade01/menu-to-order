@@ -22,6 +22,7 @@
         <AntiforgeryToken />
         <input type="hidden" name="menu" value="@Menu.Id" />
         <input type="hidden" name="note" value="@Order.Note" />
+        <input type="hidden" name="key" value="@Guid.NewGuid()" />
         @foreach (var line in Order.Lines)
         {
             <input type="hidden" name="qty.@line.MenuItemId" value="@line.Quantity" />

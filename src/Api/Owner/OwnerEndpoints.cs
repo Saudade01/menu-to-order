@@ -49,7 +49,7 @@ public static class OwnerEndpoints
             var since = time.GetUtcNow().ToUnixTimeSeconds();
             MenuIntake.Start(services, restaurant.Id, image);
             return Results.Redirect($"/o/{token}/review?since={since}");
-        }).WithMetadata(new RequestSizeLimitAttribute(PhotoCheck.MaxBytes + 64 * 1024));
+        });
 
         owner.MapPost("/flags/{id:guid}", async (string token, Guid id, [FromForm] string? action, [FromForm] string? value,
             MenuDb db, Review review, CancellationToken ct) =>
@@ -103,7 +103,19 @@ public static class OwnerEndpoints
             return new RazorComponentResult<OrdersPage>(new { Token = token, Restaurant = restaurant, Orders = orders });
         });
 
-        owner.MapGet("/qr", async (string token, HttpRequest request, MenuDb db, CancellationToken ct) =>
+        owner.MapPost("/tables", async (string token, [FromForm] string? tables, MenuDb db, CancellationToken ct) =>
+        {
+            if (await db.FindOwnerAsync(token, ct) is not { } restaurant)
+                return Results.NotFound();
+            if (!int.TryParse(tables, out var count) || count is < 1 or > 100)
+                return Results.Redirect($"/o/{token}/qr?notice={Uri.EscapeDataString("Masa sayısı 1 ile 100 arasında olmalı.")}");
+
+            restaurant.ChangeTableCount(count);
+            await db.SaveChangesAsync(ct);
+            return Results.Redirect($"/o/{token}/qr");
+        });
+
+        owner.MapGet("/qr", async (string token, string? notice, HttpRequest request, MenuDb db, CancellationToken ct) =>
         {
             if (await db.FindOwnerAsync(token, ct) is not { } restaurant)
                 return Results.NotFound();
@@ -114,7 +126,7 @@ public static class OwnerEndpoints
                 .Select(table => $"{request.Scheme}://{request.Host}/m/{restaurant.Slug}/{table}")
                 .Select((url, i) => new QrCode(i + 1, url, Png(url)))
                 .ToList();
-            return new RazorComponentResult<QrPage>(new { Token = token, Restaurant = restaurant, Codes = codes });
+            return new RazorComponentResult<QrPage>(new { Token = token, Restaurant = restaurant, Codes = codes, Notice = notice });
         });
     }
 

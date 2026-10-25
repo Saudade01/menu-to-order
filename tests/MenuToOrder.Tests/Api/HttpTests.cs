@@ -47,6 +47,36 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Sending_the_same_cart_twice_places_one_order()
+    {
+        var client = Client();
+        var (owner, restaurant) = await Upload(client, "kose-lokantasi");
+        await Post(client, $"{owner}/publish", []);
+
+        var table = $"/m/{restaurant.Slug}/3";
+        var menu = await client.GetStringAsync(table, Ct);
+        (string, string)[] cart = [("menu", MenuId().Match(menu).Groups[1].Value), ($"qty.{DishField().Match(menu).Groups[1].Value}", "1")];
+        var review = await (await Post(client, $"{table}/cart", cart, from: table)).Content.ReadAsStringAsync(Ct);
+        (string, string)[] order = [.. cart, ("key", OrderKey().Match(review).Groups[1].Value)];
+
+        var first = await Post(client, $"{table}/orders", order, from: table);
+        var second = await Post(client, $"{table}/orders", order, from: table);
+
+        Assert.Equal(first.Headers.Location, second.Headers.Location);
+        await using var db = postgres.CreateDb();
+        Assert.Equal(1, await db.Orders.CountAsync(o => o.RestaurantId == restaurant.Id, Ct));
+    }
+
+    [Fact]
+    public async Task An_old_or_wrong_qr_code_gets_a_plain_explanation()
+    {
+        var response = await Client().GetAsync("/m/boyle-bir-yer-yok/1", Ct);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Contains("şu an kullanılamıyor", await response.Content.ReadAsStringAsync(Ct));
+    }
+
+    [Fact]
     public async Task A_form_sent_without_the_antiforgery_token_is_refused()
     {
         using var form = new MultipartFormDataContent { { new StringContent("Sahte"), "name" }, { new StringContent("2"), "tables" } };
@@ -114,4 +144,7 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
 
     [GeneratedRegex("""name="qty\.([0-9a-f-]+)" """)]
     private static partial Regex DishField();
+
+    [GeneratedRegex("""name="key" value="([^"]+)" """)]
+    private static partial Regex OrderKey();
 }

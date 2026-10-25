@@ -21,4 +21,10 @@ public sealed class Restaurant
         TableCount = tableCount;
         CreatedAt = createdAt;
     }
+
+    public void ChangeTableCount(int tableCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tableCount);
+        TableCount = tableCount;
+    }
 }

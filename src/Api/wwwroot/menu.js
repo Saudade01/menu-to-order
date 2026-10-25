@@ -11,6 +11,8 @@ if (form) {
     const update = () => {
         let count = 0, sum = 0;
         for (const field of fields) {
+            // Typing 25 shows 20: the box and the total never disagree with what the server accepts.
+            if (field.value !== "" && String(clamp(field.value)) !== field.value) field.value = clamp(field.value);
             count += clamp(field.value);
             sum += clamp(field.value) * Number(field.dataset.price);
         }

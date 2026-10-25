@@ -1,5 +1,9 @@
 <Page Title="@Restaurant.Name" RefreshSeconds="@(Reading ? 10 : null)">
     <h1>@Restaurant.Name</h1>
+    @if (!Published)
+    {
+        <p class="reads">Bu sayfanın adresi sizin anahtarınız: yer imlerine ekleyin ve kimseyle paylaşmayın. Kaybederseniz menünüze tekrar ulaşamazsınız.</p>
+    }
 
     @if (Notice is not null)
     {

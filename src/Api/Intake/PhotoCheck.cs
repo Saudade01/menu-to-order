@@ -11,13 +11,16 @@ public static class PhotoCheck
         if (photo is null || photo.Length == 0)
             return (null, "Menünün fotoğrafını seçin.");
         if (photo.Length > MaxBytes)
-            return (null, "Fotoğraf 10 MB'tan büyük.");
+            return (null, "Fotoğraf 10 MB'tan büyük. Telefonun kamerasıyla çekip doğrudan yükleyin.");
 
         using var buffer = new MemoryStream();
         await photo.CopyToAsync(buffer, ct);
         var bytes = buffer.ToArray();
-        return MediaType(bytes) is { } mediaType
-            ? (new MenuImage(bytes, mediaType), null)
+        if (MediaType(bytes) is { } mediaType)
+            return (new MenuImage(bytes, mediaType), null);
+
+        return IsHeic(bytes)
+            ? (null, "Bu bir iPhone (HEIC) fotoğrafı. Telefondan doğrudan yükleyin ya da JPEG olarak kaydedin.")
             : (null, "Bu dosya JPEG, PNG ya da WebP bir görsel değil.");
     }
 
@@ -29,4 +32,7 @@ public static class PhotoCheck
         [0x52, 0x49, 0x46, 0x46, _, _, _, _, 0x57, 0x45, 0x42, 0x50, ..] => "image/webp",
         _ => null,
     };
+
+    public static bool IsHeic(ReadOnlySpan<byte> head) =>
+        head.Length >= 12 && head[4..8].SequenceEqual("ftyp"u8) && (head[8..12].SequenceEqual("heic"u8) || head[8..12].SequenceEqual("heix"u8) || head[8..12].SequenceEqual("mif1"u8));
 }

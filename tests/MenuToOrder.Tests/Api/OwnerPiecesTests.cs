@@ -38,6 +38,16 @@ public class OwnerPiecesTests(PostgresFixture postgres)
     public void Photos_are_judged_by_their_bytes(byte[] head, string? expected) =>
         Assert.Equal(expected, PhotoCheck.MediaType(head));
 
+    [Fact]
+    public void An_iphone_heic_photo_is_recognised_so_the_owner_gets_a_useful_message()
+    {
+        byte[] heic = [0, 0, 0, 24, .. "ftypheic"u8];
+
+        Assert.Null(PhotoCheck.MediaType(heic));
+        Assert.True(PhotoCheck.IsHeic(heic));
+        Assert.False(PhotoCheck.IsHeic(File.ReadAllBytes(Repo.At("samples", "menus", "kose-lokantasi.jpg"))));
+    }
+
     [Theory]
     [InlineData("185.5", "185,50 ₺")]
     [InlineData("1250", "1.250 ₺")]

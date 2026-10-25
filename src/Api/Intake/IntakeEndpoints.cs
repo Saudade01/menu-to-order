@@ -35,6 +35,6 @@ public static class IntakeEndpoints
             MenuIntake.Start(services, restaurant.Id, image);
 
             return Results.Redirect($"/o/{token}/review");
-        }).WithMetadata(new RequestSizeLimitAttribute(PhotoCheck.MaxBytes + 64 * 1024));
+        });
     }
 }
