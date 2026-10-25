@@ -122,6 +122,39 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 details { margin-top: 36px; }
 summary { cursor: pointer; font-weight: 600; padding: 12px 0; border-top: 1px solid var(--line); }
 
+/* Guest menu: section tabs stay on top, quantities step with one thumb */
+.tabs {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 -18px 8px;
+    padding: 10px 18px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tabs a {
+    flex: none;
+    padding: 7px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: .9rem;
+    text-decoration: none;
+}
+.tabs a[aria-current] { background: var(--ink); border-color: var(--ink); color: #fff; }
+section[id] { scroll-margin-top: 64px; }
+.stepper { display: inline-flex; align-items: center; gap: 4px; }
+.step { display: none; width: 34px; height: 34px; padding: 0; border-radius: 999px; font-size: 1.1rem; line-height: 1; background: var(--card); color: var(--ink); border-color: var(--line); }
+.js .step { display: inline-flex; align-items: center; justify-content: center; }
+.js .item input.qty { width: 40px; border: 0; background: transparent; padding: 0; -moz-appearance: textfield; }
+.js .item input.qty::-webkit-inner-spin-button, .js .item input.qty::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
 /* Guest checkout stays within thumb reach on long menus */
 .checkout {
     position: sticky;
@@ -132,8 +165,8 @@ summary { cursor: pointer; font-weight: 600; padding: 12px 0; border-top: 1px so
     backdrop-filter: blur(6px);
     border-top: 1px solid var(--line);
 }
-.checkout label { margin-top: 0; }
-.checkout button { width: 100%; margin-top: 10px; padding: 15px; }
+.checkout button { width: 100%; padding: 15px; border-radius: 999px; background: var(--accent); border-color: var(--accent); }
+.checkout button:hover { background: #a94822; }
 
 /* QR cards */
 .qr { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }

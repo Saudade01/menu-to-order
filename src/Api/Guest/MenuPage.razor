@@ -1,33 +1,48 @@
-<Page Title="@Restaurant.Name">
+<Page Title="@Restaurant.Name" Script="/menu.js">
     <h1>@Restaurant.Name</h1>
     <p class="lead">Masa @Table</p>
+
+    <nav class="tabs" aria-label="Bölümler">
+        @foreach (var (section, index) in Sections.Select((s, i) => (s, i)))
+        {
+            <a href="#bolum-@index" aria-current="@(index == 0 ? "true" : null)">@section.Key</a>
+        }
+    </nav>
 
     @if (Notice is not null)
     {
         <p class="notice">@Notice</p>
     }
 
-    <form method="post" action="/m/@Restaurant.Slug/@Table/cart">
+    <form method="post" action="/m/@Restaurant.Slug/@Table/cart" data-cart>
         <AntiforgeryToken />
         <input type="hidden" name="menu" value="@Menu.Id" />
 
-        @foreach (var section in Menu.Items.OrderBy(i => i.Position).GroupBy(i => i.Category ?? "Diğer"))
+        @foreach (var (section, index) in Sections.Select((s, i) => (s, i)))
         {
-            <h2>@section.Key</h2>
-            @foreach (var item in section)
-            {
-                <div class="item">
-                    <label class="dish" for="q-@item.Id">@item.Name @if (item.Description is not null) { <small>@item.Description</small> }</label>
-                    <span class="price">@Money.Lira(item.Price!.Value)</span>
-                    <input id="q-@item.Id" class="qty" type="number" name="qty.@item.Id" min="0" max="@Order.MaxQuantity" value="0" inputmode="numeric" />
-                </div>
-            }
+            <section id="bolum-@index">
+                <h2>@section.Key</h2>
+                @foreach (var item in section)
+                {
+                    <div class="item">
+                        <label class="dish" for="q-@item.Id">@item.Name @if (item.Description is not null) { <small>@item.Description</small> }</label>
+                        <span class="price">@Money.Lira(item.Price!.Value)</span>
+                        <span class="stepper">
+                            <button type="button" class="step" data-step="-1" aria-label="@item.Name azalt">−</button>
+                            <input id="q-@item.Id" class="qty" type="number" name="qty.@item.Id" min="0" max="@Order.MaxQuantity" value="0"
+                                   inputmode="numeric" data-price="@item.Price!.Value.ToString(CultureInfo.InvariantCulture)" />
+                            <button type="button" class="step" data-step="1" aria-label="@item.Name artır">+</button>
+                        </span>
+                    </div>
+                }
+            </section>
         }
 
+        <label for="note">Mutfağa not</label>
+        <input id="note" name="note" type="text" maxlength="@Order.MaxNoteLength" placeholder="örneğin soğansız olsun" />
+
         <div class="checkout">
-            <label for="note">Mutfağa not</label>
-            <input id="note" name="note" type="text" maxlength="@Order.MaxNoteLength" placeholder="örneğin soğansız olsun" />
-            <button type="submit">Siparişi gözden geçir</button>
+            <button type="submit" data-cart-total>Siparişi gözden geçir</button>
         </div>
     </form>
 </Page>
@@ -37,4 +52,7 @@
     [Parameter, EditorRequired] public int Table { get; set; }
     [Parameter, EditorRequired] public MenuVersion Menu { get; set; } = null!;
     [Parameter] public string? Notice { get; set; }
+
+    private List<IGrouping<string, MenuItem>> Sections =>
+        Menu.Items.OrderBy(i => i.Position).GroupBy(i => i.Category ?? "Diğer").ToList();
 }

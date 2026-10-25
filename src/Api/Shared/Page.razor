@@ -9,6 +9,10 @@
         <meta http-equiv="refresh" content="@seconds" />
     }
     <link rel="stylesheet" href="/site.css" />
+    @if (Script is not null)
+    {
+        <script src="@Script" defer></script>
+    }
 </head>
 <body>
     <main>@ChildContent</main>
@@ -19,4 +23,5 @@
     [Parameter] public string Title { get; set; } = "";
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public int? RefreshSeconds { get; set; }
+    [Parameter] public string? Script { get; set; }
 }
