@@ -58,7 +58,7 @@ public class CheckoutTests
 
     [Fact]
     public void An_empty_cart_is_refused() =>
-        Assert.Equal("Pick at least one dish.", Checkout.Read(Form(("qty." + Soda.Id, "0"))).Error);
+        Assert.Equal("En az bir yemek seçin.", Checkout.Read(Form(("qty." + Soda.Id, "0"))).Error);
 
     [Fact]
     public void A_dish_without_a_price_cannot_be_ordered() =>

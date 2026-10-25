@@ -28,7 +28,7 @@ public class GateTests(PostgresFixture postgres)
         await using var db = postgres.CreateDb();
         var outcome = await Gate(db).PublishAsync(draft.Version.Id, Ct);
 
-        Assert.Equal(new PublishOutcome.Blocked("6 flagged field(s) still need the owner."), outcome);
+        Assert.Equal(new PublishOutcome.Blocked("6 alan hâlâ sizin onayınızı bekliyor."), outcome);
         Assert.Equal(MenuStatus.Draft, (await db.MenuVersions.SingleAsync(v => v.Id == draft.Version.Id, Ct)).Status);
     }
 
@@ -69,7 +69,7 @@ public class GateTests(PostgresFixture postgres)
         await Gate(db).PublishAsync(draft.Version.Id, Ct);
 
         Assert.IsType<PublishOutcome.AlreadyPublished>(await Gate(db).PublishAsync(draft.Version.Id, Ct));
-        Assert.Equal(new ReviewOutcome.Rejected("A published menu cannot change."),
+        Assert.Equal(new ReviewOutcome.Rejected("Yayındaki bir menü değiştirilemez."),
             await review.CorrectAsync(draft.Flags[0].Id, "999", Ct));
     }
 

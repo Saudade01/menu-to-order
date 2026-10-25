@@ -3,11 +3,11 @@
 
     @if (Published)
     {
-        <p class="notice ok">This menu is live. <a href="/o/@Token/qr">Print the table QR codes</a> · <a href="/o/@Token/orders">See orders</a></p>
+        <p class="notice ok">Menünüz yayında. <a href="/o/@Token/qr">Masa QR kodlarını yazdırın</a> · <a href="/o/@Token/orders">Siparişleri görün</a></p>
     }
     else
     {
-        <p class="lead">The menu was read twice. Below are the fields that need your eye before it goes live.</p>
+        <p class="lead">Menü iki kez okundu. Yayına çıkmadan önce bakmanız gereken alanlar aşağıda.</p>
     }
 
     @if (Notice is not null)
@@ -18,12 +18,12 @@
     @if (Version.Items.Count == 0)
     {
         <div class="notice">
-            <p>The menu could not be read, so nothing was saved as a dish.</p>
+            <p>Menü okunamadı, bu yüzden hiçbir yemek kaydedilmedi.</p>
             @foreach (var run in Runs.Where(r => r.Error is not null))
             {
-                <p class="reads">Read @run.Pass: @run.Error</p>
+                <p class="reads">@(run.Pass). okuma: @run.Error</p>
             }
-            <p><a href="/">Try another photo</a></p>
+            <p><a href="/">Başka bir fotoğraf deneyin</a></p>
         </div>
     }
     else
@@ -31,15 +31,15 @@
         @if (!Published && LiraQuestions > 0)
         {
             <div class="notice">
-                <p>@(LiraQuestions == 1 ? "One price on this menu has" : $"{LiraQuestions} prices on this menu have") no currency printed. Are this menu's prices in lira?</p>
+                <p>@(LiraQuestions == 1 ? "Bir fiyatın" : $"{LiraQuestions} fiyatın") yanında para birimi yazmıyor. Bu menüdeki fiyatlar TL mi?</p>
                 <form method="post" action="/o/@Token/lira">
                     <AntiforgeryToken />
-                    <button type="submit">Yes, they are in lira</button>
+                    <button type="submit">Evet, fiyatlar TL</button>
                 </form>
             </div>
         }
 
-        @foreach (var section in Version.Items.OrderBy(i => i.Position).GroupBy(i => i.Category ?? "Other"))
+        @foreach (var section in Version.Items.OrderBy(i => i.Position).GroupBy(i => i.Category ?? "Diğer"))
         {
             <h2>@section.Key</h2>
             @foreach (var item in section)
@@ -52,7 +52,7 @@
                     }
                     else
                     {
-                        <span class="price missing">no price</span>
+                        <span class="price missing">fiyat yok</span>
                     }
                 </div>
 
@@ -62,15 +62,15 @@
                     {
                         var first = field.First();
                         <div class="flag">
-                            <p><strong>@field.Key</strong>: @string.Join(" · ", field.Select(f => Explain(f.Reason)))</p>
-                            <p class="reads">First read: @(first.FirstPassValue ?? "nothing") · Second read: @(first.SecondPassValue ?? "nothing")</p>
+                            <p><strong>@Label(field.Key)</strong>: @string.Join(" · ", field.Select(f => Explain(f.Reason)))</p>
+                            <p class="reads">1. okuma: @(first.FirstPassValue ?? "boş") · 2. okuma: @(first.SecondPassValue ?? "boş")</p>
                             <form method="post" action="/o/@Token/flags/@first.Id" class="row">
                                 <AntiforgeryToken />
-                                <input type="text" name="value" value="@Current(item, field.Key)" aria-label="Correct @field.Key.ToString().ToLowerInvariant()" />
-                                <button type="submit" name="action" value="correct">Save</button>
+                                <input type="text" name="value" value="@Current(item, field.Key)" aria-label="@Label(field.Key) düzelt" />
+                                <button type="submit" name="action" value="correct">Kaydet</button>
                                 @if (!(field.Key == MenuField.Price && item.Price is null))
                                 {
-                                    <button type="submit" class="quiet" name="action" value="confirm">Looks right</button>
+                                    <button type="submit" class="quiet" name="action" value="confirm">Doğru</button>
                                 }
                             </form>
                         </div>
@@ -83,10 +83,10 @@
         {
             <form method="post" action="/o/@Token/publish" class="row" style="margin-top: 32px">
                 <AntiforgeryToken />
-                <button type="submit" disabled="@(OpenFields > 0)">Publish the menu</button>
+                <button type="submit" disabled="@(OpenFields > 0)">Menüyü yayınla</button>
                 @if (OpenFields > 0)
                 {
-                    <span class="reads">@(OpenFields == 1 ? "One field still needs" : $"{OpenFields} fields still need") you.</span>
+                    <span class="reads">@(OpenFields == 1 ? "Bir alan" : $"{OpenFields} alan") hâlâ onayınızı bekliyor.</span>
                 }
             </form>
         }
@@ -121,13 +121,21 @@
 
     private static string Explain(FlagReason reason) => reason switch
     {
-        FlagReason.PassesDisagree => "the two reads disagree",
-        FlagReason.PriceUnreadable => "no single price could be read",
-        FlagReason.PriceOutOfRange => "the price looks implausible",
-        FlagReason.ForeignCurrency => "not priced in lira",
-        FlagReason.DuplicateName => "the same name appears twice in this section",
-        FlagReason.UnknownCategory => "this section is not on the menu",
-        FlagReason.LowLegibility => "hard to read in the photo",
-        _ => "the currency is missing",
+        FlagReason.PassesDisagree => "iki okuma birbirini tutmuyor",
+        FlagReason.PriceUnreadable => "tek bir fiyat okunamadı",
+        FlagReason.PriceOutOfRange => "fiyat makul görünmüyor",
+        FlagReason.ForeignCurrency => "fiyat TL değil",
+        FlagReason.DuplicateName => "bu bölümde aynı isim iki kez geçiyor",
+        FlagReason.UnknownCategory => "bu bölüm menüde yok",
+        FlagReason.LowLegibility => "fotoğrafta zor okunuyor",
+        _ => "para birimi yazmıyor",
+    };
+
+    private static string Label(MenuField field) => field switch
+    {
+        MenuField.Name => "Ad",
+        MenuField.Category => "Bölüm",
+        MenuField.Description => "Açıklama",
+        _ => "Fiyat",
     };
 }

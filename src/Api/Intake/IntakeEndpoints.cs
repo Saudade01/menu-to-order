@@ -22,19 +22,19 @@ public static class IntakeEndpoints
 
             name = name?.Trim();
             if (string.IsNullOrEmpty(name) || name.Length > 80)
-                return Retry("Give the restaurant a name of up to 80 characters.");
+                return Retry("Restoran adını yazın (en fazla 80 karakter).");
             if (!int.TryParse(tables, out var tableCount) || tableCount is < 1 or > 100)
-                return Retry("The number of tables has to be between 1 and 100.");
+                return Retry("Masa sayısı 1 ile 100 arasında olmalı.");
             if (photo is null || photo.Length == 0)
-                return Retry("Choose a photo of the menu.");
+                return Retry("Menünün fotoğrafını seçin.");
             if (photo.Length > PhotoCheck.MaxBytes)
-                return Retry("The photo is larger than 10 MB.");
+                return Retry("Fotoğraf 10 MB'tan büyük.");
 
             using var buffer = new MemoryStream();
             await photo.CopyToAsync(buffer, ct);
             var bytes = buffer.ToArray();
             if (PhotoCheck.MediaType(bytes) is not { } mediaType)
-                return Retry("That file is not a JPEG, PNG or WebP image.");
+                return Retry("Bu dosya JPEG, PNG ya da WebP bir görsel değil.");
 
             var token = OwnerToken.New();
             var restaurant = new Restaurant(name, Slug.For(name), OwnerToken.Hash(token), tableCount, time.GetUtcNow());

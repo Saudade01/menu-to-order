@@ -1,6 +1,6 @@
-<Page Title="New menu">
-    <h1>Turn a menu photo into an order page</h1>
-    <p class="lead">The menu is read twice. Anything the two reads disagree on, or that looks wrong, comes back to you before it goes live.</p>
+<Page Title="Yeni menü">
+    <h1>Menünüzün fotoğrafını sipariş sayfasına çevirin</h1>
+    <p class="lead">Menü iki kez okunur. İki okumanın uyuşmadığı ya da yanlış görünen her şey, yayına çıkmadan önce size sorulur.</p>
 
     @if (Error is not null)
     {
@@ -9,17 +9,17 @@
 
     <form method="post" action="/restaurants" enctype="multipart/form-data">
         <AntiforgeryToken />
-        <label for="name">Restaurant name</label>
+        <label for="name">Restoran adı</label>
         <input id="name" name="name" type="text" maxlength="80" required value="@Name" />
 
-        <label for="tables">Number of tables</label>
+        <label for="tables">Masa sayısı</label>
         <input id="tables" name="tables" type="number" min="1" max="100" required value="@(Tables ?? "8")" />
 
-        <label for="photo">Photo of the menu</label>
+        <label for="photo">Menünün fotoğrafı</label>
         <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" required />
 
-        <p class="reads">Reading takes a minute or two. Keep this page open.</p>
-        <button type="submit">Read the menu</button>
+        <p class="reads">Okuma bir iki dakika sürer. Bu sayfayı kapatmayın.</p>
+        <button type="submit">Menüyü oku</button>
     </form>
 </Page>
 

@@ -25,15 +25,15 @@ public sealed class VerificationGate(MenuDb db, TimeProvider time)
         if (version.Status == MenuStatus.Published)
             return new PublishOutcome.AlreadyPublished();
         if (version.Items.Count == 0)
-            return new PublishOutcome.Blocked("The menu has no items.");
+            return new PublishOutcome.Blocked("Menüde hiç ürün yok.");
 
         var open = version.Items.Sum(i => i.Flags.Where(f => f.ResolvedAt is null).DistinctBy(f => f.Field).Count());
         if (open > 0)
-            return new PublishOutcome.Blocked($"{open} flagged field(s) still need the owner.");
+            return new PublishOutcome.Blocked($"{open} alan hâlâ sizin onayınızı bekliyor.");
 
         // Unreadable prices are always flagged, but the gate checks directly instead of trusting that.
         if (version.Items.Any(i => i.Price is null))
-            return new PublishOutcome.Blocked("An item has no price.");
+            return new PublishOutcome.Blocked("Fiyatı olmayan bir ürün var.");
 
         var at = time.GetUtcNow();
         version.Publish(at);

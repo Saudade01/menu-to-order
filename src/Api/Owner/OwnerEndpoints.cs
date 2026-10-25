@@ -75,7 +75,7 @@ public static class OwnerEndpoints
             if (await db.FindOwnerAsync(token, ct) is not { } restaurant)
                 return Results.NotFound();
             if (!await db.MenuVersions.AnyAsync(v => v.RestaurantId == restaurant.Id && v.Status == MenuStatus.Published, ct))
-                return Back(token, "Publish the menu first.");
+                return Back(token, "Önce menüyü yayınlayın.");
 
             var codes = Enumerable.Range(1, restaurant.TableCount)
                 .Select(table => $"{request.Scheme}://{request.Host}/m/{restaurant.Slug}/{table}")

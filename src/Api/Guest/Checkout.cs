@@ -4,7 +4,7 @@ namespace MenuToOrder.Api.Guest;
 
 public static class Checkout
 {
-    public const string MenuChanged = "The menu was just updated. Please check your order again.";
+    public const string MenuChanged = "Menü az önce güncellendi. Lütfen siparişinize yeniden göz atın.";
 
     // Reads "qty.{itemId}" fields. Only ids and counts come from the form, never a price.
     public static (Dictionary<Guid, int>? Cart, string? Error) Read(IFormCollection form)
@@ -15,12 +15,12 @@ public static class Checkout
             if (!key.StartsWith("qty.", StringComparison.Ordinal))
                 continue;
             if (!Guid.TryParse(key.AsSpan(4), out var id) || !int.TryParse(value, out var quantity) || quantity is < 0 or > Order.MaxQuantity)
-                return (null, $"Each dish can be ordered 0 to {Order.MaxQuantity} times.");
+                return (null, $"Her yemekten 0 ile {Order.MaxQuantity} arasında sipariş verilebilir.");
             if (quantity > 0)
                 cart[id] = quantity;
         }
 
-        return cart.Count == 0 ? (null, "Pick at least one dish.") : (cart, null);
+        return cart.Count == 0 ? (null, "En az bir yemek seçin.") : (cart, null);
     }
 
     public static (Order? Order, string? Error) Price(MenuVersion menu, IEnumerable<MenuItem> items, Guid seenMenuId,
@@ -32,7 +32,7 @@ public static class Checkout
 
         note = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
         if (note?.Length > Order.MaxNoteLength)
-            return (null, $"Keep the note under {Order.MaxNoteLength} characters.");
+            return (null, $"Not en fazla {Order.MaxNoteLength} karakter olabilir.");
 
         var lines = cart.Select(c => (byId[c.Key], c.Value)).OrderBy(l => l.Item1.Position);
         return (new Order(menu.RestaurantId, menu.Id, table, note, lines, now), null);

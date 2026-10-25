@@ -1,26 +1,26 @@
-<Page Title="Orders" RefreshSeconds="20">
-    <h1>@Restaurant.Name · orders</h1>
-    <p class="lead">Newest first. This page refreshes itself every 20 seconds.</p>
-    <p><a href="/o/@Token/review">Menu</a> · <a href="/o/@Token/qr">QR codes</a></p>
+<Page Title="Siparişler" RefreshSeconds="20">
+    <h1>@Restaurant.Name · siparişler</h1>
+    <p class="lead">En yenisi en üstte. Sayfa 20 saniyede bir kendini yeniler.</p>
+    <p><a href="/o/@Token/review">Menü</a> · <a href="/o/@Token/qr">QR kodları</a></p>
 
     @if (Orders.Count == 0)
     {
-        <p class="reads">No orders yet.</p>
+        <p class="reads">Henüz sipariş yok.</p>
     }
 
     @foreach (var order in Orders)
     {
         <div class="flag order">
-            <p><strong>Table @order.TableNumber</strong> <span class="reads">· @Local(order.CreatedAt)</span></p>
+            <p><strong>Masa @order.TableNumber</strong> <span class="reads">· @Local(order.CreatedAt)</span></p>
             @foreach (var line in order.Lines)
             {
                 <div class="item"><span>@line.Quantity × @line.Name</span><span class="price">@Money.Lira(line.UnitPrice * line.Quantity)</span></div>
             }
             @if (order.Note is not null)
             {
-                <p class="reads">Note: @order.Note</p>
+                <p class="reads">Not: @order.Note</p>
             }
-            <div class="item total"><span>Total</span><span class="price">@Money.Lira(order.Total)</span></div>
+            <div class="item total"><span>Toplam</span><span class="price">@Money.Lira(order.Total)</span></div>
         </div>
     }
 </Page>

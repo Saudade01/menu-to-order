@@ -22,7 +22,7 @@ public sealed class Review(MenuDb db, TimeProvider time)
         if (outcome is not null)
             return outcome;
         if (flag!.Field == MenuField.Price && item!.Price is null)
-            return new ReviewOutcome.Rejected("There is no price to confirm; enter one instead.");
+            return new ReviewOutcome.Rejected("Onaylanacak bir fiyat yok, lütfen fiyatı yazın.");
 
         var now = time.GetUtcNow();
         foreach (var f in item!.Flags.Where(f => f.Field == flag.Field))
@@ -38,7 +38,7 @@ public sealed class Review(MenuDb db, TimeProvider time)
         if (outcome is not null)
             return outcome;
         if (string.IsNullOrWhiteSpace(value) && flag!.Field is MenuField.Name or MenuField.Price)
-            return new ReviewOutcome.Rejected("This field cannot be empty.");
+            return new ReviewOutcome.Rejected("Bu alan boş bırakılamaz.");
 
         var now = time.GetUtcNow();
         string? old;
@@ -46,7 +46,7 @@ public sealed class Review(MenuDb db, TimeProvider time)
         {
             var amount = PriceText.Parse(value).Amount;
             if (amount is null)
-                return new ReviewOutcome.Rejected("That is not a price we can read. Write it like 180 or 185,50.");
+                return new ReviewOutcome.Rejected("Bu fiyat okunamadı. 180 ya da 185,50 gibi yazın.");
 
             old = item!.Price?.ToString(CultureInfo.InvariantCulture);
             item.CorrectPrice(amount.Value);
@@ -75,7 +75,7 @@ public sealed class Review(MenuDb db, TimeProvider time)
         if (version is null)
             return new ReviewOutcome.NotFound();
         if (version.Status == MenuStatus.Published)
-            return new ReviewOutcome.Rejected("A published menu cannot change.");
+            return new ReviewOutcome.Rejected("Yayındaki bir menü değiştirilemez.");
 
         var now = time.GetUtcNow();
         foreach (var flag in version.Items.SelectMany(i => i.Flags).Where(f => f.Reason == FlagReason.CurrencyMissing))
@@ -94,7 +94,7 @@ public sealed class Review(MenuDb db, TimeProvider time)
         var item = await db.MenuItems.Include(i => i.Flags).SingleAsync(i => i.Id == flag.MenuItemId, ct);
         var status = await db.MenuVersions.Where(v => v.Id == item.MenuVersionId).Select(v => v.Status).SingleAsync(ct);
         return status == MenuStatus.Published
-            ? (flag, item, new ReviewOutcome.Rejected("A published menu cannot change."))
+            ? (flag, item, new ReviewOutcome.Rejected("Yayındaki bir menü değiştirilemez."))
             : (flag, item, null);
     }
 }

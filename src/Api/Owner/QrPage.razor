@@ -1,16 +1,16 @@
-<Page Title="QR codes">
+<Page Title="QR kodları">
     <div class="no-print">
         <h1>@Restaurant.Name</h1>
-        <p class="lead">One code per table. Print this page and cut out the cards.</p>
-        <p><a href="/o/@Token/review">Back to the menu</a> · <a href="/o/@Token/orders">See orders</a></p>
+        <p class="lead">Her masa için bir kod. Sayfayı yazdırıp kartları kesin.</p>
+        <p><a href="/o/@Token/review">Menüye dön</a> · <a href="/o/@Token/orders">Siparişler</a></p>
     </div>
 
     <div class="qr">
         @foreach (var qr in Codes)
         {
             <figure>
-                <img src="@qr.Image" alt="QR code for table @qr.Table" />
-                <figcaption>Table @qr.Table</figcaption>
+                <img src="@qr.Image" alt="Masa @qr.Table için QR kodu" />
+                <figcaption>Masa @qr.Table</figcaption>
                 <code>@qr.Url</code>
             </figure>
         }

@@ -63,9 +63,11 @@ unflagged. The generated table lives in `docs/accuracy.md`.
 
 ## What it looks like
 
+The interface is in Turkish, for the owners and guests it is built for.
+
 | Owner review | Table menu on a phone | Incoming orders |
 |---|---|---|
-| ![Owner review page with flagged fields](docs/screenshots/review.png) | ![Guest menu at table 4](docs/screenshots/menu.png) | ![Owner order list](docs/screenshots/orders.png) |
+| ![Owner review page with flagged fields](docs/screenshots/review.png) | ![Table 4 menu on a phone](docs/screenshots/menu.png) | ![Owner order list](docs/screenshots/orders.png) |
 
 ## Stack
 

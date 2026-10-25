@@ -1,6 +1,6 @@
-<Page Title="Your order">
-    <h1>Your order</h1>
-    <p class="lead">@Restaurant.Name · Table @Table</p>
+<Page Title="Siparişiniz">
+    <h1>Siparişiniz</h1>
+    <p class="lead">@Restaurant.Name · Masa @Table</p>
 
     @foreach (var line in Order.Lines)
     {
@@ -10,12 +10,12 @@
         </div>
     }
     <div class="item total">
-        <span>Total</span>
+        <span>Toplam</span>
         <span class="price">@Money.Lira(Order.Total)</span>
     </div>
     @if (Order.Note is not null)
     {
-        <p class="reads">Note: @Order.Note</p>
+        <p class="reads">Not: @Order.Note</p>
     }
 
     <form method="post" action="/m/@Restaurant.Slug/@Table/orders" class="row">
@@ -26,8 +26,8 @@
         {
             <input type="hidden" name="qty.@line.MenuItemId" value="@line.Quantity" />
         }
-        <button type="submit">Place order</button>
-        <a href="/m/@Restaurant.Slug/@Table">Start over</a>
+        <button type="submit">Siparişi ver</button>
+        <a href="/m/@Restaurant.Slug/@Table">Baştan başla</a>
     </form>
 </Page>
 
