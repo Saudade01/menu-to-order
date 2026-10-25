@@ -50,19 +50,28 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
     public async Task Sending_the_same_cart_twice_places_one_order()
     {
         var client = Client();
-        var (owner, restaurant) = await Upload(client, "kose-lokantasi");
-        await Post(client, $"{owner}/publish", []);
-
-        var table = $"/m/{restaurant.Slug}/3";
-        var menu = await client.GetStringAsync(table, Ct);
-        (string, string)[] cart = [("menu", MenuId().Match(menu).Groups[1].Value), ($"qty.{DishField().Match(menu).Groups[1].Value}", "1")];
-        var review = await (await Post(client, $"{table}/cart", cart, from: table)).Content.ReadAsStringAsync(Ct);
-        (string, string)[] order = [.. cart, ("key", OrderKey().Match(review).Groups[1].Value)];
+        var (restaurant, table, order) = await Cart(client);
 
         var first = await Post(client, $"{table}/orders", order, from: table);
         var second = await Post(client, $"{table}/orders", order, from: table);
 
         Assert.Equal(first.Headers.Location, second.Headers.Location);
+        await using var db = postgres.CreateDb();
+        Assert.Equal(1, await db.Orders.CountAsync(o => o.RestaurantId == restaurant.Id, Ct));
+    }
+
+    [Fact]
+    public async Task Two_taps_arriving_together_still_place_one_order()
+    {
+        var client = Client();
+        var (restaurant, table, order) = await Cart(client);
+
+        var answers = await Task.WhenAll(
+            Post(client, $"{table}/orders", order, from: table),
+            Post(client, $"{table}/orders", order, from: table));
+
+        Assert.All(answers, answer => Assert.Equal(HttpStatusCode.Redirect, answer.StatusCode));
+        Assert.Equal(answers[0].Headers.Location, answers[1].Headers.Location);
         await using var db = postgres.CreateDb();
         Assert.Equal(1, await db.Orders.CountAsync(o => o.RestaurantId == restaurant.Id, Ct));
     }
@@ -102,6 +111,19 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         await using var check = postgres.CreateDb();
         Assert.Null((await check.Flags.SingleAsync(f => f.Id == flag.Id, Ct)).ResolvedAt);
+    }
+
+    // A published menu and a reviewed cart, ready to be sent as an order.
+    private async Task<(Restaurant Restaurant, string Table, (string, string)[] Order)> Cart(HttpClient client)
+    {
+        var (owner, restaurant) = await Upload(client, "kose-lokantasi");
+        await Post(client, $"{owner}/publish", []);
+
+        var table = $"/m/{restaurant.Slug}/3";
+        var menu = await client.GetStringAsync(table, Ct);
+        (string, string)[] cart = [("menu", MenuId().Match(menu).Groups[1].Value), ($"qty.{DishField().Match(menu).Groups[1].Value}", "1")];
+        var review = await (await Post(client, $"{table}/cart", cart, from: table)).Content.ReadAsStringAsync(Ct);
+        return (restaurant, table, [.. cart, ("key", OrderKey().Match(review).Groups[1].Value)]);
     }
 
     private HttpClient Client() => _app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });

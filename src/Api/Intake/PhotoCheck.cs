@@ -34,5 +34,5 @@ public static class PhotoCheck
     };
 
     public static bool IsHeic(ReadOnlySpan<byte> head) =>
-        head.Length >= 12 && head[4..8].SequenceEqual("ftyp"u8) && (head[8..12].SequenceEqual("heic"u8) || head[8..12].SequenceEqual("heix"u8) || head[8..12].SequenceEqual("mif1"u8));
+        head.Length >= 12 && head[4..8].SequenceEqual("ftyp"u8) && (head[8..12].SequenceEqual("heic"u8) || head[8..12].SequenceEqual("heix"u8));
 }

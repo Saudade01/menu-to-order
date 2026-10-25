@@ -120,6 +120,10 @@ dotnet user-secrets set "Gemini:ApiKey" "<your key>" --project src/Api
 `dotnet test` runs the whole suite, including the database tests, which start
 their own Postgres container.
 
+The `Dockerfile` builds a single image for any host. It listens on port 8080 and
+needs `ConnectionStrings__Menu`, `Gemini__ApiKey` and a volume at `/data`; without
+a key it refuses to start rather than quietly replaying the samples.
+
 ## Status
 
 The whole path works locally: upload, review, publishing, per-table QR codes, and

@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+.git/
+.github/
+.vs/
+.vscode/
+tests/
+docs/
+samples/
+keys/
+PROJE.md
+CLAUDE.local.md
+.claude/

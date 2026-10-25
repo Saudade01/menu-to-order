@@ -11,3 +11,4 @@ appsettings.Local.json
 *.db-wal
 uploads/
 TestResults/
+keys/
