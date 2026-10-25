@@ -1,0 +1,22 @@
+<Page Title="@Restaurant.Name">
+    <h1>@Restaurant.Name</h1>
+    <p class="lead">Table @Table</p>
+
+    @foreach (var section in Menu.Items.OrderBy(i => i.Position).GroupBy(i => i.Category ?? "Other"))
+    {
+        <h2>@section.Key</h2>
+        @foreach (var item in section)
+        {
+            <div class="item">
+                <span>@item.Name @if (item.Description is not null) { <small>@item.Description</small> }</span>
+                <span class="price">@Money.Lira(item.Price!.Value)</span>
+            </div>
+        }
+    }
+</Page>
+
+@code {
+    [Parameter, EditorRequired] public Restaurant Restaurant { get; set; } = null!;
+    [Parameter, EditorRequired] public int Table { get; set; }
+    [Parameter, EditorRequired] public MenuVersion Menu { get; set; } = null!;
+}

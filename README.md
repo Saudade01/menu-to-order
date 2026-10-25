@@ -47,9 +47,30 @@ accuracy is something the system measures over time.
 | Order page | Server-rendered Razor components |
 | Local dev | Docker Compose (Postgres) |
 
+## Run it locally
+
+You need the .NET 10 SDK and Docker.
+
+```bash
+docker compose up -d
+dotnet run --project src/Api
+```
+
+Without an API key the app replays Gemini responses recorded from real calls, so
+the three photos in `samples/menus` work straight away. To read your own photos,
+create a free key in Google AI Studio and store it with user-secrets:
+
+```bash
+dotnet user-secrets set "Gemini:ApiKey" "<your key>" --project src/Api
+```
+
+`dotnet test` runs the whole suite, including the database tests, which start
+their own Postgres container.
+
 ## Status
 
-Early. The design is in `docs/architecture.md`.
+Upload, review, publishing and per-table QR codes work end to end. Ordering from
+the table page is next. The design is in `docs/architecture.md`.
 
 ## Why it exists
 

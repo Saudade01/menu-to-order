@@ -1,0 +1,30 @@
+<Page Title="New menu">
+    <h1>Turn a menu photo into an order page</h1>
+    <p class="lead">The menu is read twice. Anything the two reads disagree on, or that looks wrong, comes back to you before it goes live.</p>
+
+    @if (Error is not null)
+    {
+        <p class="notice">@Error</p>
+    }
+
+    <form method="post" action="/restaurants" enctype="multipart/form-data">
+        <AntiforgeryToken />
+        <label for="name">Restaurant name</label>
+        <input id="name" name="name" type="text" maxlength="80" required value="@Name" />
+
+        <label for="tables">Number of tables</label>
+        <input id="tables" name="tables" type="number" min="1" max="100" required value="@(Tables ?? "8")" />
+
+        <label for="photo">Photo of the menu</label>
+        <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" required />
+
+        <p class="reads">Reading takes about half a minute.</p>
+        <button type="submit">Read the menu</button>
+    </form>
+</Page>
+
+@code {
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public string? Tables { get; set; }
+}

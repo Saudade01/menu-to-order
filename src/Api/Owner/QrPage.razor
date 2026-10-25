@@ -1,0 +1,24 @@
+<Page Title="QR codes">
+    <div class="no-print">
+        <h1>@Restaurant.Name</h1>
+        <p class="lead">One code per table. Print this page and cut out the cards.</p>
+        <p><a href="/o/@Token/review">Back to the menu</a></p>
+    </div>
+
+    <div class="qr">
+        @foreach (var qr in Codes)
+        {
+            <figure>
+                <img src="@qr.Image" alt="QR code for table @qr.Table" />
+                <figcaption>Table @qr.Table</figcaption>
+                <code>@qr.Url</code>
+            </figure>
+        }
+    </div>
+</Page>
+
+@code {
+    [Parameter, EditorRequired] public string Token { get; set; } = "";
+    [Parameter, EditorRequired] public Restaurant Restaurant { get; set; } = null!;
+    [Parameter, EditorRequired] public List<QrCode> Codes { get; set; } = [];
+}

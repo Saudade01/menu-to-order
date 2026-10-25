@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using MenuToOrder.Data;
 using MenuToOrder.Verification;
 using Microsoft.EntityFrameworkCore;
@@ -88,22 +87,24 @@ public class GateTests(PostgresFixture postgres)
         Assert.Null((await db.Flags.SingleAsync(f => f.Id == unreadable.Id, Ct)).ResolvedAt);
     }
 
+    [Fact]
+    public async Task Confirming_a_field_answers_every_flag_on_it()
+    {
+        var draft = await Save("sahil-kafe");
+        var limonata = draft.Items.Single(i => i.Name == "Limonata");
+        var flags = draft.Flags.Where(f => f.MenuItemId == limonata.Id).ToList();
+
+        await using var db = postgres.CreateDb();
+        await new Review(db, TimeProvider.System).ConfirmAsync(flags[0].Id, Ct);
+
+        var ids = flags.Select(f => f.Id).ToList();
+        Assert.Equal(2, ids.Count);
+        Assert.All(await db.Flags.Where(f => ids.Contains(f.Id)).ToListAsync(Ct), f => Assert.NotNull(f.ResolvedAt));
+    }
+
     private static VerificationGate Gate(MenuDb db) => new(db, TimeProvider.System);
 
     private static Guid ItemOf(MenuDraft draft, Guid flagId) => draft.Flags.Single(f => f.Id == flagId).MenuItemId;
 
-    private async Task<MenuDraft> Save(string sample)
-    {
-        var restaurant = new Restaurant("Test", $"test-{Guid.NewGuid():N}", RandomNumberGenerator.GetBytes(32), 4, DateTimeOffset.UtcNow);
-        var draft = await Samples.Draft(restaurant.Id, sample, Ct);
-
-        await using var db = postgres.CreateDb();
-        db.Add(restaurant);
-        db.Add(draft.Version);
-        db.AddRange(draft.Items);
-        db.AddRange(draft.Flags);
-        db.AddRange(draft.Runs);
-        await db.SaveChangesAsync(Ct);
-        return draft;
-    }
+    private async Task<MenuDraft> Save(string sample) => (await Samples.Save(postgres, sample, Ct)).Draft;
 }

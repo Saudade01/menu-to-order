@@ -24,7 +24,10 @@ public sealed class Review(MenuDb db, TimeProvider time)
         if (flag!.Field == MenuField.Price && item!.Price is null)
             return new ReviewOutcome.Rejected("There is no price to confirm; enter one instead.");
 
-        flag.Resolve(time.GetUtcNow());
+        var now = time.GetUtcNow();
+        foreach (var f in item!.Flags.Where(f => f.Field == flag.Field))
+            f.Resolve(now);
+
         await db.SaveChangesAsync(ct);
         return new ReviewOutcome.Done();
     }
