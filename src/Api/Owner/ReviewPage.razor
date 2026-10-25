@@ -1,21 +1,23 @@
-<Page Title="@Restaurant.Name">
+<Page Title="@Restaurant.Name" RefreshSeconds="@(Reading ? 10 : null)">
     <h1>@Restaurant.Name</h1>
-
-    @if (Published)
-    {
-        <p class="notice ok">Menünüz yayında. <a href="/o/@Token/qr">Masa QR kodlarını yazdırın</a> · <a href="/o/@Token/orders">Siparişleri görün</a></p>
-    }
-    else
-    {
-        <p class="lead">Menü iki kez okundu. Yayına çıkmadan önce bakmanız gereken alanlar aşağıda.</p>
-    }
 
     @if (Notice is not null)
     {
         <p class="notice">@Notice</p>
     }
 
-    @if (Version.Items.Count == 0)
+    @if (Reading)
+    {
+        <p class="notice">Menünüz okunuyor. Bu bir iki dakika sürer, sayfa kendini yeniler.</p>
+    }
+    else if (Version is null)
+    {
+        <div class="notice">
+            <p>Okuma tamamlanamadı. Fotoğrafı yeniden okutun.</p>
+            @PhotoForm
+        </div>
+    }
+    else if (Items.Count == 0)
     {
         <div class="notice">
             <p>Menü okunamadı, bu yüzden hiçbir yemek kaydedilmedi.</p>
@@ -23,73 +25,113 @@
             {
                 <p class="reads">@(run.Pass). okuma: @run.Error</p>
             }
-            <p><a href="/">Başka bir fotoğraf deneyin</a></p>
+            @PhotoForm
         </div>
+    }
+    else if (Published)
+    {
+        <p class="notice ok">Menünüz yayında. <a href="/o/@Token/qr">Masa QR kodlarını yazdırın</a> · <a href="/o/@Token/orders">Siparişleri görün</a></p>
+        <details>
+            <summary>Menüyü yeni fotoğrafla güncelleyin</summary>
+            @PhotoForm
+        </details>
     }
     else
     {
-        @if (!Published && LiraQuestions > 0)
+        @if (Runs.Any(r => r.Error is not null))
         {
             <div class="notice">
-                <p>@(LiraQuestions == 1 ? "Bir fiyatın" : $"{LiraQuestions} fiyatın") yanında para birimi yazmıyor. Bu menüdeki fiyatlar TL mi?</p>
-                <form method="post" action="/o/@Token/lira">
-                    <AntiforgeryToken />
-                    <button type="submit">Evet, fiyatlar TL</button>
-                </form>
+                <p>Okumalardan biri tamamlanamadı. İki okuma karşılaştırılamadığı için her yemek soruluyor; fotoğrafı yeniden okutmanızı öneririz.</p>
+                @PhotoForm
             </div>
         }
 
-        @foreach (var section in Version.Items.OrderBy(i => i.Position).GroupBy(i => i.Category ?? "Diğer"))
-        {
-            <h2>@section.Key</h2>
-            @foreach (var item in section)
-            {
-                <div class="item">
-                    <span>@item.Name @if (item.Description is not null) { <small>@item.Description</small> }</span>
-                    @if (item.Price is { } price)
-                    {
-                        <span class="price @(!Published && item.Flags.Any(f => f.Field == MenuField.Price && f.ResolvedAt is null) ? "missing" : "")">@Money.Lira(price)</span>
-                    }
-                    else
-                    {
-                        <span class="price missing">fiyat yok</span>
-                    }
-                </div>
+        <p class="lead">
+            @Items.Count yemek okundu.
+            @(Waiting.Count == 0 && LiraQuestions == 0 ? "Hepsi hazır, menüyü yayınlayabilirsiniz." : $"{Waiting.Count + (LiraQuestions > 0 ? 1 : 0)} konuda onayınız gerekiyor.")
+        </p>
 
-                @if (!Published)
-                {
-                    @foreach (var field in Questions(item))
-                    {
-                        var first = field.First();
-                        <div class="flag">
-                            <p><strong>@Label(field.Key)</strong>: @string.Join(" · ", field.Select(f => Explain(f.Reason)))</p>
-                            <p class="reads">1. okuma: @(first.FirstPassValue ?? "boş") · 2. okuma: @(first.SecondPassValue ?? "boş")</p>
-                            <form method="post" action="/o/@Token/flags/@first.Id" class="row">
-                                <AntiforgeryToken />
-                                <input type="text" name="value" value="@Current(item, field.Key)" aria-label="@Label(field.Key) düzelt" />
-                                <button type="submit" name="action" value="correct">Kaydet</button>
-                                @if (!(field.Key == MenuField.Price && item.Price is null))
-                                {
-                                    <button type="submit" class="quiet" name="action" value="confirm">Doğru</button>
-                                }
-                            </form>
-                        </div>
-                    }
-                }
-            }
-        }
-
-        @if (!Published)
+        @if (LiraQuestions > 0)
         {
-            <form method="post" action="/o/@Token/publish" class="row" style="margin-top: 32px">
+            <form method="post" action="/o/@Token/lira" class="card">
                 <AntiforgeryToken />
-                <button type="submit" disabled="@(OpenFields > 0)">Menüyü yayınla</button>
-                @if (OpenFields > 0)
-                {
-                    <span class="reads">@(OpenFields == 1 ? "Bir alan" : $"{OpenFields} alan") hâlâ onayınızı bekliyor.</span>
-                }
+                <p class="why">@(LiraQuestions == 1 ? "Bir fiyatın" : $"{LiraQuestions} fiyatın") yanında para birimi yazmıyor. Bu menüdeki fiyatlar TL mi?</p>
+                <button type="submit">Evet, fiyatlar TL</button>
             </form>
         }
+
+        @foreach (var item in Waiting)
+        {
+            <article class="card">
+                <div class="card-head">
+                    <strong>@item.Name</strong>
+                    <span class="price @(item.Price is null ? "missing" : "")">@(item.Price is { } p ? Money.Lira(p) : "fiyat yok")</span>
+                </div>
+                @if (item.Category is not null || item.Description is not null)
+                {
+                    <small class="reads">@string.Join(" · ", new[] { item.Category, item.Description }.OfType<string>())</small>
+                }
+
+                @foreach (var field in Questions(item))
+                {
+                    var flag = field.First();
+                    var choices = new[] { flag.FirstPassValue, flag.SecondPassValue }.OfType<string>().Distinct().ToList();
+                    <div class="question">
+                        <p class="why"><span class="chip">@Label(field.Key)</span> @string.Join(", ", field.Select(f => Explain(f.Reason)))</p>
+
+                        @if (choices.Count == 2)
+                        {
+                            <form method="post" action="/o/@Token/flags/@flag.Id" class="row">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="action" value="correct" />
+                                <span class="reads">Hangisi doğru?</span>
+                                @foreach (var choice in choices)
+                                {
+                                    <button type="submit" class="quiet" name="value" value="@choice">@choice</button>
+                                }
+                            </form>
+                        }
+
+                        <form method="post" action="/o/@Token/flags/@flag.Id" class="row">
+                            <AntiforgeryToken />
+                            <input type="text" name="value" value="@Current(item, field.Key)" placeholder="@Hint(field.Key)" aria-label="@Label(field.Key) düzelt" />
+                            <button type="submit" name="action" value="correct">Kaydet</button>
+                            @if (!(field.Key == MenuField.Price && item.Price is null))
+                            {
+                                <button type="submit" class="quiet" name="action" value="confirm">Doğru</button>
+                            }
+                        </form>
+                    </div>
+                }
+            </article>
+        }
+
+        <form method="post" action="/o/@Token/publish" class="publish">
+            <AntiforgeryToken />
+            <button type="submit" disabled="@(OpenFields > 0)">Menüyü yayınla</button>
+            @if (OpenFields > 0)
+            {
+                <span class="reads">Önce yukarıdaki soruları cevaplayın.</span>
+            }
+        </form>
+    }
+
+    @if (Items.Count > 0)
+    {
+        <details open="@(Published || Waiting.Count == 0)">
+            <summary>Menünün tamamı (@Items.Count yemek)</summary>
+            @foreach (var section in Items.OrderBy(i => i.Position).GroupBy(i => i.Category ?? "Diğer"))
+            {
+                <h2>@section.Key</h2>
+                @foreach (var item in section)
+                {
+                    <div class="item">
+                        <span>@item.Name @if (item.Description is not null) { <small>@item.Description</small> }</span>
+                        <span class="price @(!Published && item.Flags.Any(f => f.ResolvedAt is null && f.Field == MenuField.Price) ? "missing" : "")">@(item.Price is { } p ? Money.Lira(p) : "fiyat yok")</span>
+                    </div>
+                }
+            }
+        </details>
     }
 </Page>
 
@@ -98,14 +140,17 @@
 
     [Parameter, EditorRequired] public string Token { get; set; } = "";
     [Parameter, EditorRequired] public Restaurant Restaurant { get; set; } = null!;
-    [Parameter, EditorRequired] public MenuVersion Version { get; set; } = null!;
+    [Parameter] public MenuVersion? Version { get; set; }
     [Parameter, EditorRequired] public List<ExtractionRun> Runs { get; set; } = [];
     [Parameter] public string? Notice { get; set; }
+    [Parameter] public bool Reading { get; set; }
 
-    private bool Published => Version.Status == MenuStatus.Published;
-    private IEnumerable<Flag> Open => Version.Items.SelectMany(i => i.Flags).Where(f => f.ResolvedAt is null);
+    private IReadOnlyList<MenuItem> Items => Version?.Items ?? [];
+    private bool Published => Version?.Status == MenuStatus.Published;
+    private IEnumerable<Flag> Open => Items.SelectMany(i => i.Flags).Where(f => f.ResolvedAt is null);
     private int LiraQuestions => Open.Count(f => f.Reason == FlagReason.CurrencyMissing);
     private int OpenFields => Open.DistinctBy(f => (f.MenuItemId, f.Field)).Count();
+    private List<MenuItem> Waiting => Items.OrderBy(i => i.Position).Where(i => Questions(i).Any()).ToList();
 
     // Missing currency is asked once for the whole menu, so it is left out of the per-dish questions.
     private static IEnumerable<IGrouping<MenuField, Flag>> Questions(MenuItem item) =>
@@ -118,6 +163,14 @@
         MenuField.Description => item.Description,
         _ => item.Price?.ToString("0.##", Turkish),
     };
+
+    private RenderFragment PhotoForm => @<form method="post" action="/o/@Token/photo" enctype="multipart/form-data" class="row">
+        <AntiforgeryToken />
+        <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" capture="environment" required aria-label="Menünün fotoğrafı" />
+        <button type="submit">Yeniden oku</button>
+    </form>;
+
+    private static string Hint(MenuField field) => field == MenuField.Price ? "örneğin 180 ya da 185,50" : "";
 
     private static string Explain(FlagReason reason) => reason switch
     {

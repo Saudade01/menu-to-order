@@ -48,6 +48,7 @@ app.Use((context, next) =>
     context.Response.Headers["Referrer-Policy"] = "no-referrer";
     return next();
 });
+app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapIntake();

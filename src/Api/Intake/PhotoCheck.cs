@@ -1,8 +1,25 @@
+using MenuToOrder.Extraction;
+
 namespace MenuToOrder.Api.Intake;
 
 public static class PhotoCheck
 {
     public const long MaxBytes = 10 * 1024 * 1024;
+
+    public static async Task<(MenuImage? Image, string? Error)> ReadAsync(IFormFile? photo, CancellationToken ct)
+    {
+        if (photo is null || photo.Length == 0)
+            return (null, "Menünün fotoğrafını seçin.");
+        if (photo.Length > MaxBytes)
+            return (null, "Fotoğraf 10 MB'tan büyük.");
+
+        using var buffer = new MemoryStream();
+        await photo.CopyToAsync(buffer, ct);
+        var bytes = buffer.ToArray();
+        return MediaType(bytes) is { } mediaType
+            ? (new MenuImage(bytes, mediaType), null)
+            : (null, "Bu dosya JPEG, PNG ya da WebP bir görsel değil.");
+    }
 
     // Judged by the file's first bytes; the browser-supplied content type can say anything.
     public static string? MediaType(ReadOnlySpan<byte> head) => head switch

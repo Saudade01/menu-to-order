@@ -10,7 +10,7 @@
 
     @foreach (var order in Orders)
     {
-        <div class="flag order">
+        <div class="card">
             <p><strong>Masa @order.TableNumber</strong> <span class="reads">· @Local(order.CreatedAt)</span></p>
             @foreach (var line in order.Lines)
             {

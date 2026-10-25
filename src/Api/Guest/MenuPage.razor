@@ -24,9 +24,11 @@
             }
         }
 
-        <label for="note">Mutfağa not</label>
-        <input id="note" name="note" type="text" maxlength="@Order.MaxNoteLength" placeholder="örneğin soğansız olsun" />
-        <p><button type="submit">Siparişi gözden geçir</button></p>
+        <div class="checkout">
+            <label for="note">Mutfağa not</label>
+            <input id="note" name="note" type="text" maxlength="@Order.MaxNoteLength" placeholder="örneğin soğansız olsun" />
+            <button type="submit">Siparişi gözden geçir</button>
+        </div>
     </form>
 </Page>
 

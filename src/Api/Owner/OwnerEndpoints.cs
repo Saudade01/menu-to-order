@@ -1,3 +1,4 @@
+using MenuToOrder.Api.Intake;
 using MenuToOrder.Api.Shared;
 using MenuToOrder.Data;
 using MenuToOrder.Verification;
@@ -14,15 +15,41 @@ public static class OwnerEndpoints
     {
         var owner = app.MapGroup("/o/{token}");
 
-        owner.MapGet("/review", async (string token, string? notice, MenuDb db, CancellationToken ct) =>
+        owner.MapGet("/review", async (string token, string? notice, long? since, MenuDb db, TimeProvider time, CancellationToken ct) =>
         {
             if (await db.FindOwnerAsync(token, ct) is not { } restaurant)
                 return Results.NotFound();
 
             var version = await Latest(db, restaurant.Id, ct);
-            var runs = await db.ExtractionRuns.Where(r => r.MenuVersionId == version.Id).OrderBy(r => r.Pass).ToListAsync(ct);
-            return new RazorComponentResult<ReviewPage>(new { Token = token, Restaurant = restaurant, Version = version, Runs = runs, Notice = notice });
+            var runs = version is null ? [] : await db.ExtractionRuns.Where(r => r.MenuVersionId == version.Id).OrderBy(r => r.Pass).ToListAsync(ct);
+
+            // A read is under way until a version newer than the upload shows up. Each pass gives up after
+            // three minutes, so a read still missing after five has failed outright.
+            var uploaded = since is { } s ? DateTimeOffset.FromUnixTimeSeconds(s) : restaurant.CreatedAt;
+            var reading = version is null || version.CreatedAt < uploaded;
+            var stalled = reading && time.GetUtcNow() - uploaded > TimeSpan.FromMinutes(5);
+
+            return new RazorComponentResult<ReviewPage>(new
+            {
+                Token = token, Restaurant = restaurant, Version = reading ? null : version, Runs = runs,
+                Notice = notice, Reading = reading && !stalled,
+            });
         });
+
+        owner.MapPost("/photo", async (string token, IFormFile? photo, MenuDb db, IServiceProvider services, TimeProvider time,
+            CancellationToken ct) =>
+        {
+            if (await db.FindOwnerAsync(token, ct) is not { } restaurant)
+                return Results.NotFound();
+
+            var (image, error) = await PhotoCheck.ReadAsync(photo, ct);
+            if (image is null)
+                return Back(token, error);
+
+            var since = time.GetUtcNow().ToUnixTimeSeconds();
+            MenuIntake.Start(services, restaurant.Id, image);
+            return Results.Redirect($"/o/{token}/review?since={since}");
+        }).WithMetadata(new RequestSizeLimitAttribute(PhotoCheck.MaxBytes + 64 * 1024));
 
         owner.MapPost("/flags/{id:guid}", async (string token, Guid id, [FromForm] string? action, [FromForm] string? value,
             MenuDb db, Review review, CancellationToken ct) =>
@@ -40,7 +67,10 @@ public static class OwnerEndpoints
             if (await db.FindOwnerAsync(token, ct) is not { } restaurant)
                 return Results.NotFound();
 
-            var outcome = await review.ConfirmLiraAsync((await Latest(db, restaurant.Id, ct)).Id, ct);
+            if (await Latest(db, restaurant.Id, ct) is not { } version)
+                return Back(token, "Menü henüz okunuyor.");
+
+            var outcome = await review.ConfirmLiraAsync(version.Id, ct);
             return Back(token, (outcome as ReviewOutcome.Rejected)?.Reason);
         });
 
@@ -49,7 +79,10 @@ public static class OwnerEndpoints
             if (await db.FindOwnerAsync(token, ct) is not { } restaurant)
                 return Results.NotFound();
 
-            return await gate.PublishAsync((await Latest(db, restaurant.Id, ct)).Id, ct) switch
+            if (await Latest(db, restaurant.Id, ct) is not { } version)
+                return Back(token, "Menü henüz okunuyor.");
+
+            return await gate.PublishAsync(version.Id, ct) switch
             {
                 PublishOutcome.Blocked blocked => Back(token, blocked.Reason),
                 PublishOutcome.NotFound => Results.NotFound(),
@@ -85,11 +118,11 @@ public static class OwnerEndpoints
         });
     }
 
-    private static Task<MenuVersion> Latest(MenuDb db, Guid restaurantId, CancellationToken ct) =>
+    private static Task<MenuVersion?> Latest(MenuDb db, Guid restaurantId, CancellationToken ct) =>
         db.MenuVersions.Include(v => v.Items).ThenInclude(i => i.Flags)
             .Where(v => v.RestaurantId == restaurantId)
             .OrderByDescending(v => v.CreatedAt)
-            .FirstAsync(ct);
+            .FirstOrDefaultAsync(ct);
 
     private static IResult Back(string token, string? notice) =>
         Results.Redirect($"/o/{token}/review" + (notice is null ? "" : $"?notice={Uri.EscapeDataString(notice)}"));

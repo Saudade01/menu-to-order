@@ -46,20 +46,41 @@ the owner has touched anything:
 | Menu | Dishes | Fields | Read right | Right but flagged | Ambiguous, flagged | Misread, flagged | Reached the page unflagged |
 |---|---|---|---|---|---|---|---|
 | Köşe Lokantası (clean print) | 11 | 44 | 44 | 0 | 0 | 0 | 0 |
-| Sahil Kafe (awkward prices) | 11 | 44 | 38 | 3 | 3 | 0 | 0 |
+| Sahil Kafe (awkward prices) | 11 | 44 | 37 | 4 | 3 | 0 | 0 |
 | Mangal Evi (glare and blur) | 10 | 40 | 37 | 3 | 0 | 0 | 0 |
-| All | 32 | 128 | 119 | 6 | 3 | 0 | 0 |
+| All | 32 | 128 | 118 | 7 | 3 | 0 | 0 |
 
-Gemini read every unambiguous field correctly here, which is why the misread
-column is empty. These are clean renders, and real phone photos will be harder;
-misreads such as `180 ₺` coming back as `18 ₺` are covered by tests built from
-constructed cases instead. The three prices the menus themselves leave open (a
-half and full portion, "Sorunuz", a dollar price) were all flagged. Six correct
-fields went to the owner anyway: two dishes sharing a name, a price printed
-without a currency, and three prices the model marked as hard to read.
+The three prices the menus themselves leave open (a half and full portion,
+"Sorunuz", a dollar price) were all flagged. Seven correct fields went to the
+owner anyway: two dishes sharing a name, a price printed without a currency,
+three prices the model marked as hard to read, and one dish name that the second
+pass misread as "kiőilik" instead of "kişilik". The first pass had it right, the
+passes disagreed, and the owner gets both readings to pick from. That is the two
+reads doing their job: no draft value was wrong, which is why the misread column
+is empty. These are clean renders, and real phone photos will be harder.
 
 `AccuracyTests` fails CI if a wrong or ambiguous field ever gets through
 unflagged. The generated table lives in `docs/accuracy.md`.
+
+## A real photo
+
+The first real test was a handwritten whiteboard outside a lokanta (the photo
+is not in the repo). All 33 dishes were found and every price was read
+correctly. It also showed gaps that the clean samples had hidden:
+
+- The two passes filed two dishes under different headings, and matching by
+  heading and name split each of them in two. Matching now falls back to the
+  name, and only the heading gets flagged.
+- Dishes written outside any heading were each asked about. Now only a heading
+  that is not on the menu is questioned.
+- A note saying the mantı is served on Fridays only was dropped. The prompt now
+  asks for notes like that, and they show up under the dish.
+
+Re-recording the samples with the new prompt turned up two more. One pass
+misread a letter in a name, which split that dish too; names that differ by a
+letter or two in the same section now pair up, with the name flagged. The other
+pass spelled "ş" as an "s" followed by a combining cedilla, so all text is now
+normalised to NFC before it is compared or stored.
 
 ## What it looks like
 
