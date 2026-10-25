@@ -87,6 +87,24 @@ public class MenuDbTests(PostgresFixture postgres)
         await Assert.ThrowsAsync<DbUpdateException>(() => delete.SaveChangesAsync(Ct));
     }
 
+    [Fact]
+    public async Task An_order_keeps_its_lines_and_exact_total()
+    {
+        var item = await SaveItem(185.50m);
+        await using (var db = postgres.CreateDb())
+        {
+            var restaurantId = await db.MenuVersions.Where(v => v.Id == item.MenuVersionId).Select(v => v.RestaurantId).SingleAsync(Ct);
+            db.Orders.Add(new Order(restaurantId, item.MenuVersionId, 2, "acısız", [(item, 3)], Now));
+            await db.SaveChangesAsync(Ct);
+        }
+
+        await using var read = postgres.CreateDb();
+        var order = await read.Orders.Include(o => o.Lines).SingleAsync(o => o.MenuVersionId == item.MenuVersionId, Ct);
+
+        Assert.Equal(556.50m, order.Total);
+        Assert.Equal(("Adana kebap", 185.50m, 3), (order.Lines[0].Name, order.Lines[0].UnitPrice, order.Lines[0].Quantity));
+    }
+
     private async Task<MenuItem> SaveItem(decimal? price)
     {
         var restaurant = new Restaurant("Köşe Lokantası", $"kose-{Guid.NewGuid():N}", RandomNumberGenerator.GetBytes(32), 4, Now);

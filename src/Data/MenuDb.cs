@@ -11,6 +11,7 @@ public sealed class MenuDb(DbContextOptions<MenuDb> options) : DbContext(options
     public DbSet<ExtractionRun> ExtractionRuns => Set<ExtractionRun>();
     public DbSet<Flag> Flags => Set<Flag>();
     public DbSet<Correction> Corrections => Set<Correction>();
+    public DbSet<Order> Orders => Set<Order>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
@@ -33,6 +34,15 @@ public sealed class MenuDb(DbContextOptions<MenuDb> options) : DbContext(options
             .OnDelete(DeleteBehavior.Restrict);
         model.Entity<Correction>().HasOne<MenuItem>().WithMany().HasForeignKey(c => c.MenuItemId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Orders are records of money changing hands; nothing on the menu side may delete them.
+        model.Entity<Order>(o =>
+        {
+            o.HasOne<Restaurant>().WithMany().HasForeignKey(x => x.RestaurantId).OnDelete(DeleteBehavior.Restrict);
+            o.HasOne<MenuVersion>().WithMany().HasForeignKey(x => x.MenuVersionId).OnDelete(DeleteBehavior.Restrict);
+            o.HasIndex(x => new { x.RestaurantId, x.CreatedAt });
+        });
+        model.Entity<OrderLine>().HasOne<MenuItem>().WithMany().HasForeignKey(l => l.MenuItemId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 

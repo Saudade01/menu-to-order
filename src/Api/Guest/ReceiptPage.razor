@@ -1,0 +1,23 @@
+<Page Title="Order sent">
+    <h1>Order sent</h1>
+    <p class="notice ok">@Restaurant.Name has your order for table @Order.TableNumber.</p>
+
+    @foreach (var line in Order.Lines)
+    {
+        <div class="item">
+            <span>@line.Quantity × @line.Name</span>
+            <span class="price">@Money.Lira(line.UnitPrice * line.Quantity)</span>
+        </div>
+    }
+    <div class="item total">
+        <span>Total</span>
+        <span class="price">@Money.Lira(Order.Total)</span>
+    </div>
+
+    <p><a href="/m/@Restaurant.Slug/@Order.TableNumber">Back to the menu</a></p>
+</Page>
+
+@code {
+    [Parameter, EditorRequired] public Restaurant Restaurant { get; set; } = null!;
+    [Parameter, EditorRequired] public Order Order { get; set; } = null!;
+}

@@ -57,6 +57,19 @@ public static class OwnerEndpoints
             };
         });
 
+        owner.MapGet("/orders", async (string token, MenuDb db, CancellationToken ct) =>
+        {
+            if (await db.FindOwnerAsync(token, ct) is not { } restaurant)
+                return Results.NotFound();
+
+            var orders = await db.Orders.Include(o => o.Lines.OrderBy(l => l.Position))
+                .Where(o => o.RestaurantId == restaurant.Id)
+                .OrderByDescending(o => o.CreatedAt)
+                .Take(100)
+                .ToListAsync(ct);
+            return new RazorComponentResult<OrdersPage>(new { Token = token, Restaurant = restaurant, Orders = orders });
+        });
+
         owner.MapGet("/qr", async (string token, HttpRequest request, MenuDb db, CancellationToken ct) =>
         {
             if (await db.FindOwnerAsync(token, ct) is not { } restaurant)

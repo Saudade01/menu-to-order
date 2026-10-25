@@ -196,6 +196,75 @@ namespace MenuToOrder.Data.Migrations
                     b.ToTable("MenuVersions");
                 });
 
+            modelBuilder.Entity("MenuToOrder.Data.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MenuVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TableNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MenuVersionId");
+
+                    b.HasIndex("RestaurantId", "CreatedAt");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("MenuToOrder.Data.OrderLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MenuItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MenuItemId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderLine");
+                });
+
             modelBuilder.Entity("MenuToOrder.Data.Restaurant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -276,6 +345,36 @@ namespace MenuToOrder.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MenuToOrder.Data.Order", b =>
+                {
+                    b.HasOne("MenuToOrder.Data.MenuVersion", null)
+                        .WithMany()
+                        .HasForeignKey("MenuVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MenuToOrder.Data.Restaurant", null)
+                        .WithMany()
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MenuToOrder.Data.OrderLine", b =>
+                {
+                    b.HasOne("MenuToOrder.Data.MenuItem", null)
+                        .WithMany()
+                        .HasForeignKey("MenuItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MenuToOrder.Data.Order", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MenuToOrder.Data.MenuItem", b =>
                 {
                     b.Navigation("Flags");
@@ -284,6 +383,11 @@ namespace MenuToOrder.Data.Migrations
             modelBuilder.Entity("MenuToOrder.Data.MenuVersion", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("MenuToOrder.Data.Order", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

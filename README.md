@@ -69,8 +69,9 @@ their own Postgres container.
 
 ## Status
 
-Upload, review, publishing and per-table QR codes work end to end. Ordering from
-the table page is next. The design is in `docs/architecture.md`.
+The whole path works locally: upload, review, publishing, per-table QR codes, and
+ordering from the table page with the total worked out on the server from the
+published prices. The design is in `docs/architecture.md`.
 
 ## Why it exists
 

@@ -2,21 +2,37 @@
     <h1>@Restaurant.Name</h1>
     <p class="lead">Table @Table</p>
 
-    @foreach (var section in Menu.Items.OrderBy(i => i.Position).GroupBy(i => i.Category ?? "Other"))
+    @if (Notice is not null)
     {
-        <h2>@section.Key</h2>
-        @foreach (var item in section)
-        {
-            <div class="item">
-                <span>@item.Name @if (item.Description is not null) { <small>@item.Description</small> }</span>
-                <span class="price">@Money.Lira(item.Price!.Value)</span>
-            </div>
-        }
+        <p class="notice">@Notice</p>
     }
+
+    <form method="post" action="/m/@Restaurant.Slug/@Table/cart">
+        <AntiforgeryToken />
+        <input type="hidden" name="menu" value="@Menu.Id" />
+
+        @foreach (var section in Menu.Items.OrderBy(i => i.Position).GroupBy(i => i.Category ?? "Other"))
+        {
+            <h2>@section.Key</h2>
+            @foreach (var item in section)
+            {
+                <div class="item">
+                    <label class="dish" for="q-@item.Id">@item.Name @if (item.Description is not null) { <small>@item.Description</small> }</label>
+                    <span class="price">@Money.Lira(item.Price!.Value)</span>
+                    <input id="q-@item.Id" class="qty" type="number" name="qty.@item.Id" min="0" max="@Order.MaxQuantity" value="0" inputmode="numeric" />
+                </div>
+            }
+        }
+
+        <label for="note">Note for the kitchen</label>
+        <input id="note" name="note" type="text" maxlength="@Order.MaxNoteLength" placeholder="e.g. no onions" />
+        <p><button type="submit">Review order</button></p>
+    </form>
 </Page>
 
 @code {
     [Parameter, EditorRequired] public Restaurant Restaurant { get; set; } = null!;
     [Parameter, EditorRequired] public int Table { get; set; }
     [Parameter, EditorRequired] public MenuVersion Menu { get; set; } = null!;
+    [Parameter] public string? Notice { get; set; }
 }

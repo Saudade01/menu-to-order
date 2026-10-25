@@ -1,0 +1,39 @@
+<Page Title="Your order">
+    <h1>Your order</h1>
+    <p class="lead">@Restaurant.Name · Table @Table</p>
+
+    @foreach (var line in Order.Lines)
+    {
+        <div class="item">
+            <span>@line.Quantity × @line.Name</span>
+            <span class="price">@Money.Lira(line.UnitPrice * line.Quantity)</span>
+        </div>
+    }
+    <div class="item total">
+        <span>Total</span>
+        <span class="price">@Money.Lira(Order.Total)</span>
+    </div>
+    @if (Order.Note is not null)
+    {
+        <p class="reads">Note: @Order.Note</p>
+    }
+
+    <form method="post" action="/m/@Restaurant.Slug/@Table/orders" class="row">
+        <AntiforgeryToken />
+        <input type="hidden" name="menu" value="@Menu.Id" />
+        <input type="hidden" name="note" value="@Order.Note" />
+        @foreach (var line in Order.Lines)
+        {
+            <input type="hidden" name="qty.@line.MenuItemId" value="@line.Quantity" />
+        }
+        <button type="submit">Place order</button>
+        <a href="/m/@Restaurant.Slug/@Table">Start over</a>
+    </form>
+</Page>
+
+@code {
+    [Parameter, EditorRequired] public Restaurant Restaurant { get; set; } = null!;
+    [Parameter, EditorRequired] public int Table { get; set; }
+    [Parameter, EditorRequired] public MenuVersion Menu { get; set; } = null!;
+    [Parameter, EditorRequired] public Order Order { get; set; } = null!;
+}

@@ -4,6 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@Title · menu-to-order</title>
+    @if (RefreshSeconds is { } seconds)
+    {
+        <meta http-equiv="refresh" content="@seconds" />
+    }
     <style>
         :root { --ink: #22201c; --muted: #6b645a; --paper: #faf7f1; --line: #e3ddd2; --accent: #b4532a; --ok: #2f6b3d; --warn: #fdf1e7; }
         * { box-sizing: border-box; }
@@ -20,7 +24,10 @@
         button.quiet { background: #fff; color: var(--ink); }
         button:disabled { opacity: .45; cursor: not-allowed; }
         .item { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; }
-        .item small { display: block; color: var(--muted); }
+        .item small { display: block; color: var(--muted); font-weight: normal; }
+        .item .dish { flex: 1; margin: 0; font-weight: normal; }
+        .item .qty { width: 64px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; font: inherit; text-align: center; }
+        .total { border-top: 1px solid var(--line); margin-top: 8px; font-weight: 700; }
         .price { white-space: nowrap; font-variant-numeric: tabular-nums; }
         .missing { color: var(--accent); font-weight: 600; }
         .flag { background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 12px; margin: 4px 0 12px; }
@@ -45,4 +52,5 @@
 @code {
     [Parameter] public string Title { get; set; } = "";
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public int? RefreshSeconds { get; set; }
 }
