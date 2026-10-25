@@ -4,8 +4,8 @@
 
 Turn a photo of a paper menu into a working QR order page.
 
-A restaurant owner photographs the printed menu, the service reads it, and within
-a minute the owner has an ordering page without typing anything in.
+A restaurant owner photographs the printed menu, the service reads it, and a
+couple of minutes later the owner has an ordering page without typing anything in.
 
 Reading the menu is the easy part. Most of this codebase deals with the cases
 where the model reads it wrong.
@@ -36,6 +36,36 @@ signals:
 Fields that pass all three are published. The rest go to a review queue where
 the owner confirms or corrects them. Every correction is logged, so first-pass
 accuracy is something the system measures over time.
+
+## Results on the sample menus
+
+The three sample menus are rendered by `samples/render.py`, so the right answer
+for every field is known. Scored against the recorded Gemini responses, before
+the owner has touched anything:
+
+| Menu | Dishes | Fields | Read right | Right but flagged | Ambiguous, flagged | Misread, flagged | Reached the page unflagged |
+|---|---|---|---|---|---|---|---|
+| Köşe Lokantası (clean print) | 11 | 44 | 44 | 0 | 0 | 0 | 0 |
+| Sahil Kafe (awkward prices) | 11 | 44 | 38 | 3 | 3 | 0 | 0 |
+| Mangal Evi (glare and blur) | 10 | 40 | 37 | 3 | 0 | 0 | 0 |
+| All | 32 | 128 | 119 | 6 | 3 | 0 | 0 |
+
+Gemini read every unambiguous field correctly here, which is why the misread
+column is empty. These are clean renders, and real phone photos will be harder;
+misreads such as `180 ₺` coming back as `18 ₺` are covered by tests built from
+constructed cases instead. The three prices the menus themselves leave open (a
+half and full portion, "Sorunuz", a dollar price) were all flagged. Six correct
+fields went to the owner anyway: two dishes sharing a name, a price printed
+without a currency, and three prices the model marked as hard to read.
+
+`AccuracyTests` fails CI if a wrong or ambiguous field ever gets through
+unflagged. The generated table lives in `docs/accuracy.md`.
+
+## What it looks like
+
+| Owner review | Table menu on a phone | Incoming orders |
+|---|---|---|
+| ![Owner review page with flagged fields](docs/screenshots/review.png) | ![Guest menu at table 4](docs/screenshots/menu.png) | ![Owner order list](docs/screenshots/orders.png) |
 
 ## Stack
 
@@ -75,5 +105,13 @@ published prices. The design is in `docs/architecture.md`.
 
 ## Why it exists
 
-A portfolio project, built in the open. The focus is production LLM work where
-most of the effort goes into catching the model's mistakes.
+To get a small restaurant's menu online without anyone retyping it, and without
+a wrong price slipping through.
+
+Plenty of cafés and lokantas have a printed menu and nothing else. Putting it
+online usually means entering every dish and price by hand, and a typo in a
+price costs money on every order until someone spots it. Here the owner takes
+one photo, answers the few questions the system is unsure about, and prints a
+QR code for each table. Guests order from their phones, the owner sees each
+order with its table and note, and nothing goes live that the owner has not had
+the chance to check.

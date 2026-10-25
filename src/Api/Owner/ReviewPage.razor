@@ -31,7 +31,7 @@
         @if (!Published && LiraQuestions > 0)
         {
             <div class="notice">
-                <p>@LiraQuestions price(s) on this menu have no currency printed. Are this menu's prices in lira?</p>
+                <p>@(LiraQuestions == 1 ? "One price on this menu has" : $"{LiraQuestions} prices on this menu have") no currency printed. Are this menu's prices in lira?</p>
                 <form method="post" action="/o/@Token/lira">
                     <AntiforgeryToken />
                     <button type="submit">Yes, they are in lira</button>
@@ -48,7 +48,7 @@
                     <span>@item.Name @if (item.Description is not null) { <small>@item.Description</small> }</span>
                     @if (item.Price is { } price)
                     {
-                        <span class="price">@Money.Lira(price)</span>
+                        <span class="price @(!Published && item.Flags.Any(f => f.Field == MenuField.Price && f.ResolvedAt is null) ? "missing" : "")">@Money.Lira(price)</span>
                     }
                     else
                     {
@@ -86,7 +86,7 @@
                 <button type="submit" disabled="@(OpenFields > 0)">Publish the menu</button>
                 @if (OpenFields > 0)
                 {
-                    <span class="reads">@OpenFields field(s) still need you.</span>
+                    <span class="reads">@(OpenFields == 1 ? "One field still needs" : $"{OpenFields} fields still need") you.</span>
                 }
             </form>
         }

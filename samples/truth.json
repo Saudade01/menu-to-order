@@ -1,0 +1,232 @@
+{
+  "kose-lokantasi": [
+    {
+      "category": "ÇORBALAR",
+      "name": "Mercimek Çorbası",
+      "printed": "95 ₺",
+      "lira": "95",
+      "description": null
+    },
+    {
+      "category": "ÇORBALAR",
+      "name": "Ezogelin Çorbası",
+      "printed": "95 ₺",
+      "lira": "95",
+      "description": null
+    },
+    {
+      "category": "ÇORBALAR",
+      "name": "Tavuk Suyu Çorbası",
+      "printed": "110 ₺",
+      "lira": "110",
+      "description": "Şehriyeli, limonlu"
+    },
+    {
+      "category": "ANA YEMEKLER",
+      "name": "Kuru Fasulye",
+      "printed": "180 ₺",
+      "lira": "180",
+      "description": "Tereyağlı, pilav ile"
+    },
+    {
+      "category": "ANA YEMEKLER",
+      "name": "Karnıyarık",
+      "printed": "210 ₺",
+      "lira": "210",
+      "description": null
+    },
+    {
+      "category": "ANA YEMEKLER",
+      "name": "İzmir Köfte",
+      "printed": "240 ₺",
+      "lira": "240",
+      "description": null
+    },
+    {
+      "category": "ANA YEMEKLER",
+      "name": "Tavuk Sote",
+      "printed": "220 ₺",
+      "lira": "220",
+      "description": null
+    },
+    {
+      "category": "TATLILAR",
+      "name": "Sütlaç",
+      "printed": "90 ₺",
+      "lira": "90",
+      "description": "Fırında"
+    },
+    {
+      "category": "TATLILAR",
+      "name": "Kemalpaşa",
+      "printed": "100 ₺",
+      "lira": "100",
+      "description": null
+    },
+    {
+      "category": "İÇECEKLER",
+      "name": "Ayran",
+      "printed": "35 ₺",
+      "lira": "35",
+      "description": null
+    },
+    {
+      "category": "İÇECEKLER",
+      "name": "Çay",
+      "printed": "20 ₺",
+      "lira": "20",
+      "description": null
+    }
+  ],
+  "sahil-kafe": [
+    {
+      "category": "KAHVALTI",
+      "name": "Serpme Kahvaltı (2 kişilik)",
+      "printed": "1.250,00 TL",
+      "lira": "1250.00",
+      "description": null
+    },
+    {
+      "category": "KAHVALTI",
+      "name": "Menemen",
+      "printed": "185,50 TL",
+      "lira": "185.50",
+      "description": null
+    },
+    {
+      "category": "KAHVALTI",
+      "name": "Sucuklu Yumurta",
+      "printed": "210 TL",
+      "lira": "210",
+      "description": null
+    },
+    {
+      "category": "IZGARA",
+      "name": "Köfte",
+      "printed": "Yarım 180 / Tam 320",
+      "lira": null,
+      "description": null
+    },
+    {
+      "category": "IZGARA",
+      "name": "Tavuk Şiş",
+      "printed": "290",
+      "lira": "290",
+      "description": null
+    },
+    {
+      "category": "IZGARA",
+      "name": "Günün Balığı",
+      "printed": "Sorunuz",
+      "lira": null,
+      "description": null
+    },
+    {
+      "category": "IZGARA",
+      "name": "Köfte",
+      "printed": "330 TL",
+      "lira": "330",
+      "description": "Kaşarlı"
+    },
+    {
+      "category": "TATLI",
+      "name": "Künefe",
+      "printed": "240 TL",
+      "lira": "240",
+      "description": null
+    },
+    {
+      "category": "TATLI",
+      "name": "Sufle",
+      "printed": "175 TL",
+      "lira": "175",
+      "description": null
+    },
+    {
+      "category": "SOĞUK İÇECEK",
+      "name": "Limonata",
+      "printed": "$4",
+      "lira": null,
+      "description": null
+    },
+    {
+      "category": "SOĞUK İÇECEK",
+      "name": "Soda",
+      "printed": "40 TL",
+      "lira": "40",
+      "description": null
+    }
+  ],
+  "mangal-evi": [
+    {
+      "category": "KEBAPLAR",
+      "name": "Adana Kebap",
+      "printed": "380 ₺",
+      "lira": "380",
+      "description": null
+    },
+    {
+      "category": "KEBAPLAR",
+      "name": "Urfa Kebap",
+      "printed": "380 ₺",
+      "lira": "380",
+      "description": null
+    },
+    {
+      "category": "KEBAPLAR",
+      "name": "Beyti Sarma",
+      "printed": "420 ₺",
+      "lira": "420",
+      "description": "Yoğurt ve domates sosu ile"
+    },
+    {
+      "category": "KEBAPLAR",
+      "name": "Kuzu Şiş",
+      "printed": "460 ₺",
+      "lira": "460",
+      "description": null
+    },
+    {
+      "category": "PIDE & LAHMACUN",
+      "name": "Lahmacun",
+      "printed": "120 ₺",
+      "lira": "120",
+      "description": null
+    },
+    {
+      "category": "PIDE & LAHMACUN",
+      "name": "Kıymalı Pide",
+      "printed": "260 ₺",
+      "lira": "260",
+      "description": null
+    },
+    {
+      "category": "PIDE & LAHMACUN",
+      "name": "Kaşarlı Pide",
+      "printed": "240 ₺",
+      "lira": "240",
+      "description": null
+    },
+    {
+      "category": "MEZELER",
+      "name": "Haydari",
+      "printed": "110 ₺",
+      "lira": "110",
+      "description": null
+    },
+    {
+      "category": "MEZELER",
+      "name": "Acılı Ezme",
+      "printed": "100 ₺",
+      "lira": "100",
+      "description": null
+    },
+    {
+      "category": "MEZELER",
+      "name": "Humus",
+      "printed": "130 ₺",
+      "lira": "130",
+      "description": null
+    }
+  ]
+}
