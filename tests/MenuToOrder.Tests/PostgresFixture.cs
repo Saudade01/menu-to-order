@@ -10,8 +10,9 @@ public sealed class PostgresFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:17").Build();
 
-    public MenuDb CreateDb() =>
-        new(new DbContextOptionsBuilder<MenuDb>().UseNpgsql(_container.GetConnectionString()).Options);
+    public string ConnectionString => _container.GetConnectionString();
+
+    public MenuDb CreateDb() => new(new DbContextOptionsBuilder<MenuDb>().UseNpgsql(ConnectionString).Options);
 
     public async ValueTask InitializeAsync()
     {

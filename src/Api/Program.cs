@@ -56,3 +56,6 @@ app.MapOwner();
 app.MapGuest();
 
 app.Run();
+
+// Lets the HTTP tests start this app with WebApplicationFactory.
+public partial class Program;
