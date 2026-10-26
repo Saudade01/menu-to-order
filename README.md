@@ -80,7 +80,18 @@ Re-recording the samples with the new prompt turned up two more. One pass
 misread a letter in a name, which split that dish too; names that differ by a
 letter or two in the same section now pair up, with the name flagged. The other
 pass spelled "ş" as an "s" followed by a combining cedilla, so all text is now
-normalised to NFC before it is compared or stored.
+normalised to NFC before it is stored.
+
+Reading the same board again on a busy day turned up two more. The free tier
+answered 503 often enough that one pass sometimes never came back, and with
+nothing to compare against, the owner was asked about all 132 fields. A busy
+pass is now tried twice more, and if it still has no answer nothing is saved
+and the owner is asked to read the photo again. Most of the remaining questions
+were about spelling: "TEK ANA YEMEK" against "TEK ANAYEMEK", "GAZÖZ" against
+"GAZOZ", a dotted İ. Names, sections and notes are now compared without case,
+spacing, punctuation or accents, while prices are still compared as amounts.
+On the same two answers the questions went from 13 to 2, and both left are real
+doubts about which dishes a "PORSİYON" note covers.
 
 ## What it looks like
 

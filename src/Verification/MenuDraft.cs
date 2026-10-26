@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 using MenuToOrder.Data;
 using MenuToOrder.Extraction;
@@ -16,7 +17,8 @@ public static partial class Drafts
     {
         var version = new MenuVersion(restaurantId, now);
         var runs = new[] { Run(version, first), Run(version, second) };
-        var pairs = Pair(first.Menu?.Items ?? [], second.Menu?.Items ?? []);
+        // One read alone cannot be cross-checked, and handing the owner every field of every dish is worse than reading again.
+        var pairs = first.Menu is null || second.Menu is null ? [] : Pair(first.Menu.Items, second.Menu.Items);
 
         var detected = (first.Menu?.Categories ?? []).Concat(second.Menu?.Categories ?? []).Select(Key).ToHashSet();
         var nameCounts = pairs.Select(p => (p.First ?? p.Second)!).CountBy(v => (Key(v.Category), Key(v.Name))).ToDictionary();
@@ -154,9 +156,6 @@ public static partial class Drafts
 
     private static bool Same(MenuField field, ExtractedItem a, ExtractedItem b)
     {
-        // Descriptions carry no money; "ANAYEMEK" against "ANA YEMEK" is not worth the owner's time.
-        if (field == MenuField.Description)
-            return LettersOnly(Text(a, field)) == LettersOnly(Text(b, field));
         if (field != MenuField.Price)
             return Key(Text(a, field)) == Key(Text(b, field));
 
@@ -178,11 +177,12 @@ public static partial class Drafts
     // Models sometimes spell "ş" as "s" plus a combining cedilla; NFC makes both forms the same text.
     private static string Clean(string s) => Whitespace().Replace(s.Normalize().Trim(), " ");
 
-    private static string Key(string? s) => Clean(s ?? "").ToUpper(Turkish);
+    // Text that differs only in case, spacing, punctuation or accents ("TEK ANA YEMEK", "GAZÖZ") carries no money
+    // and is not worth the owner's time. Decomposing drops the dots and cedillas, so İ, I and ı all read as I.
+    private static string Key(string? s) =>
+        string.Concat((s ?? "").ToUpper(Turkish).Normalize(NormalizationForm.FormD).Where(char.IsLetterOrDigit));
 
-    private static string LettersOnly(string? s) => string.Concat(Key(s).Where(char.IsLetterOrDigit));
-
-    private static ExtractionRun Run(MenuVersion version, MenuRead read) => new(
+    public static ExtractionRun Run(MenuVersion version, MenuRead read) => new(
         version.Id, read.Pass, read.PromptVersion, read.Model, read.InputHash, read.RawResponse, read.Error,
         read.Duration, read.InputTokens, read.OutputTokens, read.StartedAt);
 

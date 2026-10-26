@@ -26,7 +26,8 @@ var apiKey = config["Gemini:ApiKey"];
 var live = !string.IsNullOrEmpty(apiKey);
 if (live)
 {
-    builder.Services.AddSingleton(new GeminiOptions(apiKey!));
+    // The free tier's models are overloaded at different times, so the model can be switched without a rebuild.
+    builder.Services.AddSingleton(config["Gemini:Model"] is { Length: > 0 } model ? new GeminiOptions(apiKey!, model) : new GeminiOptions(apiKey!));
     builder.Services.AddHttpClient<IMenuReader, GeminiMenuReader>(http => http.Timeout = TimeSpan.FromMinutes(3));
 }
 else if (!builder.Environment.IsDevelopment())
@@ -49,7 +50,7 @@ await using (var scope = app.Services.CreateAsyncScope())
     await scope.ServiceProvider.GetRequiredService<MenuDb>().Database.MigrateAsync();
 
 app.Logger.LogInformation(live
-    ? "Reading menus live with Gemini."
+    ? $"Reading menus live with {app.Services.GetRequiredService<GeminiOptions>().Model}."
     : "No Gemini key configured: replaying recorded responses, so only the sample photos can be read.");
 
 // Owner links carry the credential in the path, so they must not leak through the Referer header.

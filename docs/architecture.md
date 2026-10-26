@@ -55,6 +55,10 @@ comes down only when the correction log shows it can.
 Prices printed without a currency are common on Turkish menus. Rather than ask
 about each one, the owner answers once per menu whether its prices are in lira.
 
+Names, sections and notes are compared without case, spacing, punctuation or
+accents, so "TEK ANA YEMEK" and "TEK ANAYEMEK" count as the same reading.
+Prices are compared as parsed amounts.
+
 ## Why two passes instead of one
 
 A single model call sounds equally confident whether it is right or wrong. Two
@@ -62,6 +66,12 @@ calls with different prompts tend to disagree exactly where the input is
 ambiguous, and that disagreement is the signal. It costs one extra call per
 menu, which is fine because a menu is extracted once and then served on every
 order.
+
+A pass that Gemini answers with "busy" (503, 429, 500) or a network error is
+tried twice more, 5 and 15 seconds apart, and every try is logged. If a pass
+still has no answer, nothing is saved: with one read there is nothing to
+compare, and asking the owner about every field of every dish is more work than
+taking the photo again.
 
 ## Data model (first cut)
 

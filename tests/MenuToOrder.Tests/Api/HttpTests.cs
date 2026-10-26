@@ -2,6 +2,8 @@ using System.Net;
 using System.Text.RegularExpressions;
 using MenuToOrder.Api.Shared;
 using MenuToOrder.Data;
+using MenuToOrder.Extraction;
+using MenuToOrder.Verification;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 
@@ -111,6 +113,30 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         await using var check = postgres.CreateDb();
         Assert.Null((await check.Flags.SingleAsync(f => f.Id == flag.Id, Ct)).ResolvedAt);
+    }
+
+    [Fact]
+    public async Task A_failed_read_names_only_the_pass_that_never_got_an_answer()
+    {
+        var client = Client();
+        var (owner, restaurant) = await Upload(client, "kose-lokantasi");
+
+        var at = DateTimeOffset.UtcNow.AddMinutes(1);
+        MenuRead Busy(int pass, int second) => new(pass, "p", "m", "h", null, null, "HTTP 503: busy", TimeSpan.Zero, null, null, at.AddSeconds(second));
+        var answered = Busy(2, 20) with { Menu = new ExtractedMenu([], []), RawResponse = "{}", Error = null };
+        var draft = Drafts.Build(restaurant.Id, Busy(1, 20), answered, new VerificationOptions(), at.AddSeconds(30));
+        await using (var db = postgres.CreateDb())
+        {
+            db.Add(draft.Version);
+            db.AddRange(draft.Runs);
+            db.AddRange(new[] { Busy(1, 0), Busy(2, 0) }.Select(r => Drafts.Run(draft.Version, r)));
+            await db.SaveChangesAsync(Ct);
+        }
+
+        var page = await client.GetStringAsync($"{owner}/review", Ct);
+
+        Assert.Contains("1. okuma: HTTP 503: busy", page);
+        Assert.DoesNotContain("2. okuma", page);
     }
 
     // A published menu and a reviewed cart, ready to be sent as an order.

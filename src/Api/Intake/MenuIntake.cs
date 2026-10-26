@@ -4,21 +4,43 @@ using MenuToOrder.Verification;
 
 namespace MenuToOrder.Api.Intake;
 
-public sealed class MenuIntake(IMenuReader reader, MenuDb db, VerificationOptions options, TimeProvider time)
+public sealed class MenuIntake(IMenuReader reader, MenuDb db, VerificationOptions options, TimeProvider time,
+    IReadOnlyList<TimeSpan>? retryDelays = null)
 {
-    // Saves both runs and the draft together, whatever the reads returned.
+    private static readonly TimeSpan[] BusyRetryDelays = [TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(15)];
+
+    // Saves the draft and every model call behind it, whatever the reads returned.
     public async Task<MenuDraft> ReadAsync(Guid restaurantId, MenuImage image, CancellationToken ct)
     {
-        var reads = await Task.WhenAll(reader.ReadAsync(image, 1, ct), reader.ReadAsync(image, 2, ct));
-        var draft = Drafts.Build(restaurantId, reads[0], reads[1], options, time.GetUtcNow());
+        var attempts = await Task.WhenAll(Attempts(image, 1, ct), Attempts(image, 2, ct));
+        var draft = Drafts.Build(restaurantId, attempts[0][^1], attempts[1][^1], options, time.GetUtcNow());
 
         db.Add(draft.Version);
         db.AddRange(draft.Items);
         db.AddRange(draft.Flags);
         db.AddRange(draft.Runs);
+        db.AddRange(attempts.SelectMany(a => a.SkipLast(1)).Select(read => Drafts.Run(draft.Version, read)));
         await db.SaveChangesAsync(ct);
         return draft;
     }
+
+    private async Task<List<MenuRead>> Attempts(MenuImage image, int pass, CancellationToken ct)
+    {
+        var reads = new List<MenuRead> { await reader.ReadAsync(image, pass, ct) };
+        foreach (var delay in retryDelays ?? BusyRetryDelays)
+        {
+            if (!Busy(reads[^1]))
+                break;
+            await Task.Delay(delay, ct);
+            reads.Add(await reader.ReadAsync(image, pass, ct));
+        }
+
+        return reads;
+    }
+
+    // Only Gemini saying it is busy, or the network failing, is worth another try; a bad answer is not.
+    private static bool Busy(MenuRead read) => read.Menu is null && read.Error is { } error &&
+        (error.StartsWith("HTTP 503") || error.StartsWith("HTTP 429") || error.StartsWith("HTTP 500") || error.StartsWith("The request failed"));
 
     // A read takes minutes on the free tier, so it must not depend on the owner's browser staying connected.
     // shortcut: runs inside the web process and is lost if the app stops mid-read; use a queue before deploying.

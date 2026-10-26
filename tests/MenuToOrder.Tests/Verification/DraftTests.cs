@@ -73,15 +73,15 @@ public class DraftTests
     }
 
     [Fact]
-    public void A_failed_pass_leaves_every_field_unconfirmed()
+    public void A_failed_pass_saves_no_dishes_for_the_owner_to_check()
     {
         var failed = Read(2) with { Menu = null, RawResponse = null, Error = "HTTP 503" };
 
         var draft = Build(Read(1, Item("Ayran", "35 ₺")), failed);
 
-        Assert.Single(draft.Items);
-        Assert.All(Enum.GetValues<MenuField>(), field =>
-            Assert.Contains(draft.Flags, f => f.Field == field && f.Reason == FlagReason.PassesDisagree));
+        Assert.Empty(draft.Items);
+        Assert.Empty(draft.Flags);
+        Assert.NotNull(draft.Runs.Single(r => r.Pass == 1).RawResponse);
         Assert.Equal("HTTP 503", draft.Runs.Single(r => r.Pass == 2).Error);
     }
 
@@ -161,13 +161,30 @@ public class DraftTests
 
     [Theory]
     [InlineData("ÇORBA + ANAYEMEK + PİLAV", "ÇORBA + ANA YEMEK + PİLAV", false)]
+    [InlineData("PORSİYON", "PORSIYON", false)]
+    [InlineData("Büyük sandviç ekmek", "Buyuk sandvic ekmek", false)]
     [InlineData("Kaşarlı", "Kaşarsız", true)]
-    public void Descriptions_that_differ_only_in_spacing_are_not_questioned(string first, string second, bool flagged)
+    [InlineData("Acılı", "Acısız", true)]
+    public void Descriptions_that_differ_only_in_spacing_or_accents_are_not_questioned(string first, string second, bool flagged)
     {
         var draft = Build(Read(1, Item("Günün Menüsü", "170 TL") with { Description = first }),
             Read(2, Item("Günün Menüsü", "170 TL") with { Description = second }));
 
         Assert.Equal(flagged, draft.Flags.Any(f => f.Field == MenuField.Description));
+    }
+
+    [Theory]
+    [InlineData("ÇORBA + ANAYEMEK + PİLAV", "ÇORBA+ANAYEMEK+PİLAV", false)]
+    [InlineData("TEK ANAYEMEK", "TEK ANA YEMEK", false)]
+    [InlineData("AMERİCANO", "AMERICANO", false)]
+    [InlineData("GAZOZ", "GAZÖZ", false)]
+    [InlineData("Kiremitte Köfte", "Kiremitte Köfle", true)]
+    public void Names_that_differ_only_in_spacing_or_accents_are_one_dish_and_not_questioned(string first, string second, bool flagged)
+    {
+        var draft = Build(Read(1, Item(first, "170 TL")), Read(2, Item(second, "170 TL")));
+
+        Assert.Single(draft.Items);
+        Assert.Equal(flagged, draft.Flags.Any(f => f.Field == MenuField.Name));
     }
 
     private static MenuDraft Build(MenuRead first, MenuRead second) =>

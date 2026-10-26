@@ -23,11 +23,11 @@ public static class OwnerEndpoints
             var version = await Latest(db, restaurant.Id, ct);
             var runs = version is null ? [] : await db.ExtractionRuns.Where(r => r.MenuVersionId == version.Id).OrderBy(r => r.Pass).ToListAsync(ct);
 
-            // A read is under way until a version newer than the upload shows up. Each pass gives up after
-            // three minutes, so a read still missing after five has failed outright.
+            // A read is under way until a version newer than the upload shows up. Each pass makes up to three
+            // tries of three minutes, so a read still missing after ten has failed outright.
             var uploaded = since is { } s ? DateTimeOffset.FromUnixTimeSeconds(s) : restaurant.CreatedAt;
             var reading = version is null || version.CreatedAt < uploaded;
-            var stalled = reading && time.GetUtcNow() - uploaded > TimeSpan.FromMinutes(5);
+            var stalled = reading && time.GetUtcNow() - uploaded > TimeSpan.FromMinutes(10);
 
             return new RazorComponentResult<ReviewPage>(new
             {

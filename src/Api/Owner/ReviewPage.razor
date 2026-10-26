@@ -24,8 +24,8 @@
     else if (Items.Count == 0)
     {
         <div class="notice">
-            <p>Menü okunamadı, bu yüzden hiçbir yemek kaydedilmedi.</p>
-            @foreach (var run in Runs.Where(r => r.Error is not null))
+            <p>Menü bu sefer okunamadı, hiçbir yemek kaydedilmedi. Gemini yoğun olabilir; birkaç dakika sonra fotoğrafı yeniden okutun.</p>
+            @foreach (var run in Runs.GroupBy(r => r.Pass).Where(g => g.All(r => r.Error is not null)).Select(g => g.MaxBy(r => r.StartedAt)!))
             {
                 <p class="reads">@(run.Pass). okuma: @run.Error</p>
             }
@@ -42,14 +42,6 @@
     }
     else
     {
-        @if (Runs.Any(r => r.Error is not null))
-        {
-            <div class="notice">
-                <p>Okumalardan biri tamamlanamadı. İki okuma karşılaştırılamadığı için her yemek soruluyor; fotoğrafı yeniden okutmanızı öneririz.</p>
-                @PhotoForm
-            </div>
-        }
-
         <p class="lead">
             @Items.Count yemek okundu.
             @(Waiting.Count == 0 && LiraQuestions == 0 ? "Hepsi hazır, menüyü yayınlayabilirsiniz." : $"{Waiting.Count + (LiraQuestions > 0 ? 1 : 0)} konuda onayınız gerekiyor.")
