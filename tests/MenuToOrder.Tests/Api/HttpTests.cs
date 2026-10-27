@@ -108,7 +108,7 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
         var flag = await db.Flags.FirstAsync(f => db.MenuItems.Any(i => i.Id == f.MenuItemId &&
             db.MenuVersions.Any(v => v.Id == i.MenuVersionId && v.RestaurantId == victim.Id)), Ct);
 
-        var response = await Post(client, $"{stranger}/flags/{flag.Id}", [("action", "confirm")]);
+        var response = await Post(client, $"{stranger}/flags", [("ids", flag.Id.ToString()), ("action", "confirm")]);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         await using var check = postgres.CreateDb();
@@ -198,6 +198,61 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
         Assert.Equal(HttpStatusCode.TooManyRequests, statuses[10]);
     }
 
+    [Fact]
+    public async Task The_same_question_on_several_dishes_is_asked_and_answered_once()
+    {
+        var client = Client();
+        var (owner, restaurant) = await Upload(client, "kose-lokantasi");
+        var draft = await SaveDraft(restaurant.Id, Pass(1, "Tek Anayemek", "70 TL"), Pass(2, null, "70 TL"));
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync($"{owner}/review", Ct));
+        var ids = FlagIds().Matches(page).Select(m => m.Groups[1].Value).Distinct().ToList();
+
+        Assert.Contains("1 konuda onayınız gerekiyor", page);
+        Assert.Equal(draft.Flags.Select(f => f.Id.ToString()).Order(), ids.Order());
+
+        await Post(client, $"{owner}/flags", [.. ids.Select(id => ("ids", id)), ("action", "correct"), ("value", "")], from: $"{owner}/review");
+
+        await using var check = postgres.CreateDb();
+        var items = await check.MenuItems.Include(i => i.Flags).Where(i => i.MenuVersionId == draft.Version.Id).ToListAsync(Ct);
+        Assert.All(items, i => Assert.Null(i.Category));
+        Assert.All(items.SelectMany(i => i.Flags), f => Assert.NotNull(f.ResolvedAt));
+    }
+
+    [Fact]
+    public async Task Prices_are_never_asked_in_bulk()
+    {
+        var client = Client();
+        var (owner, restaurant) = await Upload(client, "kose-lokantasi");
+        await SaveDraft(restaurant.Id, Pass(1, null, "180 TL"), Pass(2, null, "18 TL"));
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync($"{owner}/review", Ct));
+
+        Assert.Contains("2 konuda onayınız gerekiyor", page);
+        Assert.DoesNotContain("yemekte aynı soru", page);
+    }
+
+    // Two dishes read the same way by both passes except for the given heading and price.
+    private static MenuRead Pass(int pass, string? category, string price)
+    {
+        ExtractedItem Dish(string name) => new(name, category, null, price, []);
+        return new(pass, "p", "m", "h", "{}", new ExtractedMenu(category is null ? [] : [category], [Dish("Çorba"), Dish("Pilav")]),
+            null, TimeSpan.Zero, null, null, DateTimeOffset.UtcNow);
+    }
+
+    // Stored as the newest draft, so the review page shows it instead of the upload's own.
+    private async Task<MenuDraft> SaveDraft(Guid restaurantId, MenuRead first, MenuRead second)
+    {
+        var draft = Drafts.Build(restaurantId, first, second, new VerificationOptions(), DateTimeOffset.UtcNow.AddMinutes(1));
+        await using var db = postgres.CreateDb();
+        db.Add(draft.Version);
+        db.AddRange(draft.Items);
+        db.AddRange(draft.Flags);
+        db.AddRange(draft.Runs);
+        await db.SaveChangesAsync(Ct);
+        return draft;
+    }
+
     // A published menu and a reviewed cart, ready to be sent as an order.
     private async Task<(Restaurant Restaurant, string Table, (string, string)[] Order)> Cart(HttpClient client)
     {
@@ -254,4 +309,7 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
 
     [GeneratedRegex("""name="key" value="([^"]+)" """)]
     private static partial Regex OrderKey();
+
+    [GeneratedRegex("""name="ids" value="([0-9a-f-]{36})" """)]
+    private static partial Regex FlagIds();
 }

@@ -51,15 +51,26 @@ public static class OwnerEndpoints
             return Results.Redirect($"/o/{token}/review?since={since}");
         }).RequireRateLimiting("uploads");
 
-        owner.MapPost("/flags/{id:guid}", async (string token, Guid id, [FromForm] string? action, [FromForm] string? value,
-            MenuDb db, Review review, CancellationToken ct) =>
+        // One answer can settle the same question on several dishes, so the form carries one flag id per dish.
+        owner.MapPost("/flags", async (string token, IFormCollection form, MenuDb db, Review review, CancellationToken ct) =>
         {
-            // The flag id comes from the form, so it has to belong to the restaurant behind this link.
-            if (await db.FindOwnerAsync(token, ct) is not { } restaurant || !await db.OwnsFlagAsync(restaurant.Id, id, ct))
+            if (await db.FindOwnerAsync(token, ct) is not { } restaurant)
                 return Results.NotFound();
 
-            var outcome = action == "correct" ? await review.CorrectAsync(id, value ?? "", ct) : await review.ConfirmAsync(id, ct);
-            return Back(token, (outcome as ReviewOutcome.Rejected)?.Reason);
+            // The ids come from the form, so every one has to belong to the restaurant behind this link.
+            var ids = form["ids"].Select(s => Guid.TryParse(s, out var id) ? id : Guid.Empty).ToList();
+            foreach (var id in ids)
+                if (!await db.OwnsFlagAsync(restaurant.Id, id, ct))
+                    return Results.NotFound();
+
+            foreach (var id in ids)
+            {
+                var outcome = form["action"] == "correct" ? await review.CorrectAsync(id, form["value"].ToString(), ct) : await review.ConfirmAsync(id, ct);
+                if (outcome is ReviewOutcome.Rejected rejected)
+                    return Back(token, rejected.Reason);
+            }
+
+            return Back(token, null);
         });
 
         owner.MapPost("/lira", async (string token, MenuDb db, Review review, CancellationToken ct) =>

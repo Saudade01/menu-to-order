@@ -51,7 +51,7 @@
     {
         <p class="lead">
             @Items.Count yemek okundu.
-            @(Waiting.Count == 0 && LiraQuestions == 0 ? "Hepsi hazır, menüyü yayınlayabilirsiniz." : $"{Waiting.Count + (LiraQuestions > 0 ? 1 : 0)} konuda onayınız gerekiyor.")
+            @(Asks == 0 ? "Hepsi hazır, menüyü yayınlayabilirsiniz." : $"{Asks} konuda onayınız gerekiyor.")
         </p>
 
         @if (LiraQuestions > 0)
@@ -63,48 +63,30 @@
             </form>
         }
 
-        @foreach (var item in Waiting)
+        @foreach (var group in Shared)
+        {
+            <article class="card">
+                <div class="card-head"><strong>@group.Count yemekte aynı soru</strong></div>
+                <small class="reads">@string.Join(", ", group.Select(q => q.Item.Name))</small>
+                @Ask(group)
+            </article>
+        }
+
+        @foreach (var dish in Own)
         {
             <article class="card">
                 <div class="card-head">
-                    <strong>@item.Name</strong>
-                    <span class="price @(item.Price is null ? "missing" : "")">@(item.Price is { } p ? Money.Lira(p) : "fiyat yok")</span>
+                    <strong>@dish.Key.Name</strong>
+                    <span class="price @(dish.Key.Price is null ? "missing" : "")">@(dish.Key.Price is { } p ? Money.Lira(p) : "fiyat yok")</span>
                 </div>
-                @if (item.Category is not null || item.Description is not null)
+                @if (dish.Key.Category is not null || dish.Key.Description is not null)
                 {
-                    <small class="reads">@string.Join(" · ", new[] { item.Category, item.Description }.OfType<string>())</small>
+                    <small class="reads">@string.Join(" · ", new[] { dish.Key.Category, dish.Key.Description }.OfType<string>())</small>
                 }
 
-                @foreach (var field in Questions(item))
+                @foreach (var question in dish)
                 {
-                    var flag = field.First();
-                    var choices = new[] { flag.FirstPassValue, flag.SecondPassValue }.OfType<string>().Distinct().ToList();
-                    <div class="question">
-                        <p class="why"><span class="chip">@Label(field.Key)</span> @string.Join(", ", field.Select(f => Explain(f.Reason)))</p>
-
-                        @if (choices.Count == 2)
-                        {
-                            <form method="post" action="/o/@Token/flags/@flag.Id" class="row">
-                                <AntiforgeryToken />
-                                <input type="hidden" name="action" value="correct" />
-                                <span class="reads">Hangisi doğru?</span>
-                                @foreach (var choice in choices)
-                                {
-                                    <button type="submit" class="quiet" name="value" value="@choice">@choice</button>
-                                }
-                            </form>
-                        }
-
-                        <form method="post" action="/o/@Token/flags/@flag.Id" class="row">
-                            <AntiforgeryToken />
-                            <input type="text" name="value" value="@Current(item, field.Key)" placeholder="@Hint(field.Key)" aria-label="@Label(field.Key) düzelt" />
-                            <button type="submit" name="action" value="correct">Kaydet</button>
-                            @if (!(field.Key == MenuField.Price && item.Price is null))
-                            {
-                                <button type="submit" class="quiet" name="action" value="confirm">Doğru</button>
-                            }
-                        </form>
-                    </div>
+                    @Ask([question])
                 }
             </article>
         }
@@ -121,7 +103,7 @@
 
     @if (Items.Count > 0)
     {
-        <details open="@(Published || Waiting.Count == 0)">
+        <details open="@(Published || Shared.Count + Own.Count == 0)">
             <summary>Menünün tamamı (@Items.Count yemek)</summary>
             @foreach (var section in Items.OrderBy(i => i.Position).GroupBy(i => i.Category ?? "Diğer"))
             {
@@ -156,7 +138,26 @@
     private List<ExtractionRun> Unanswered => Runs.GroupBy(r => r.Pass).Where(g => g.All(r => r.Error is not null))
         .Select(g => g.MaxBy(r => r.StartedAt)!).ToList();
     private int OpenFields => Open.DistinctBy(f => (f.MenuItemId, f.Field)).Count();
-    private List<MenuItem> Waiting => Items.OrderBy(i => i.Position).Where(i => Questions(i).Any()).ToList();
+    private int Asks => Shared.Count + Own.Count + (LiraQuestions > 0 ? 1 : 0);
+
+    private sealed record Question(MenuItem Item, MenuField Field, List<Flag> Flags);
+
+    private List<Question>? _questions;
+    private List<List<Question>>? _shared;
+    private List<Question> AllQuestions => _questions ??= Items.OrderBy(i => i.Position)
+        .SelectMany(i => Questions(i).Select(g => new Question(i, g.Key, g.ToList()))).ToList();
+
+    // The same doubt on several dishes, such as a heading one read saw and the other did not, is asked once.
+    // Prices are never answered in bulk: each one is money on its own dish.
+    private List<List<Question>> Shared => _shared ??= AllQuestions.Where(q => q.Field != MenuField.Price)
+        .GroupBy(q => (q.Field, q.Flags[0].FirstPassValue, q.Flags[0].SecondPassValue, string.Join(",", q.Flags.Select(f => f.Reason).Order())))
+        .Where(g => g.Count() > 1).Select(g => g.ToList()).ToList();
+
+    private List<IGrouping<MenuItem, Question>> Own => AllQuestions.Except(Shared.SelectMany(g => g)).GroupBy(q => q.Item).ToList();
+
+    // A heading or note one read saw and the other did not gets "none" as a choice, so it is a tap rather than typing.
+    private static List<string> Choices(Question q) => new[] { q.Flags[0].FirstPassValue, q.Flags[0].SecondPassValue }
+        .Select(v => v ?? (q.Field is MenuField.Category or MenuField.Description ? "" : null)).OfType<string>().Distinct().ToList();
 
     // Missing currency is asked once for the whole menu, so it is left out of the per-dish questions.
     private static IEnumerable<IGrouping<MenuField, Flag>> Questions(MenuItem item) =>
@@ -169,6 +170,41 @@
         MenuField.Description => item.Description,
         _ => item.Price?.ToString("0.##", Turkish),
     };
+
+    private RenderFragment Ask(IReadOnlyList<Question> questions) => @<div class="question">
+        <p class="why"><span class="chip">@Label(questions[0].Field)</span> @string.Join(", ", questions[0].Flags.Select(f => Explain(f.Reason)))</p>
+
+        @if (Choices(questions[0]) is { Count: 2 } choices)
+        {
+            <form method="post" action="/o/@Token/flags" class="row">
+                <AntiforgeryToken />
+                @foreach (var q in questions)
+                {
+                    <input type="hidden" name="ids" value="@q.Flags[0].Id" />
+                }
+                <input type="hidden" name="action" value="correct" />
+                <span class="reads">Hangisi doğru?</span>
+                @foreach (var choice in choices)
+                {
+                    <button type="submit" class="quiet" name="value" value="@choice">@(choice.Length == 0 ? $"{Label(questions[0].Field)} yok" : choice)</button>
+                }
+            </form>
+        }
+
+        <form method="post" action="/o/@Token/flags" class="row">
+            <AntiforgeryToken />
+            @foreach (var q in questions)
+            {
+                <input type="hidden" name="ids" value="@q.Flags[0].Id" />
+            }
+            <input type="text" name="value" value="@Current(questions[0].Item, questions[0].Field)" placeholder="@Hint(questions[0].Field)" aria-label="@Label(questions[0].Field) düzelt" />
+            <button type="submit" name="action" value="correct">Kaydet</button>
+            @if (!(questions[0].Field == MenuField.Price && questions[0].Item.Price is null))
+            {
+                <button type="submit" class="quiet" name="action" value="confirm">Doğru</button>
+            }
+        </form>
+    </div>;
 
     private RenderFragment PhotoForm => @<form method="post" action="/o/@Token/photo" enctype="multipart/form-data" class="row">
         <AntiforgeryToken />

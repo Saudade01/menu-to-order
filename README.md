@@ -34,8 +34,9 @@ signals:
    low-contrast parts of the photo.
 
 Fields that pass all three are published. The rest go to a review queue where
-the owner confirms or corrects them. Every correction is logged, so first-pass
-accuracy is something the system measures over time.
+the owner confirms or corrects them. A doubt shared by several dishes is asked
+once, except for prices, which are always asked dish by dish. Every correction
+is logged, so first-pass accuracy is something the system measures over time.
 
 ## Results on the sample menus
 

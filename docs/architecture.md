@@ -54,6 +54,10 @@ comes down only when the correction log shows it can.
 
 Prices printed without a currency are common on Turkish menus. Rather than ask
 about each one, the owner answers once per menu whether its prices are in lira.
+In the same way, a doubt shared by several dishes, such as a heading one read
+saw and the other did not, is asked once and the answer applies to all of them.
+Prices are the exception: each one is money on its own dish, so it is always
+asked dish by dish.
 
 Names, sections and notes are compared without case, spacing, punctuation or
 accents, so "TEK ANA YEMEK" and "TEK ANAYEMEK" count as the same reading.
