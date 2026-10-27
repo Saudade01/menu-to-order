@@ -11,15 +11,18 @@ public class IntakeTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    [Fact]
-    public async Task A_busy_answer_is_tried_again_and_every_call_is_logged()
+    [Theory]
+    [InlineData("HTTP 503: busy")]
+    [InlineData("HTTP 429: quota")]
+    [InlineData(GeminiResponse.NoText)]
+    public async Task A_busy_or_empty_answer_is_tried_again_and_every_call_is_logged(string error)
     {
-        var reader = new BusyOnce(new RecordedMenuReader(Repo.At("samples", "recorded"), TimeProvider.System), "HTTP 503: busy");
+        var reader = new BusyOnce(new RecordedMenuReader(Repo.At("samples", "recorded"), TimeProvider.System), error);
 
         var (version, runs) = await Read(reader);
 
         Assert.Equal(11, version.Items.Count);
-        Assert.Equal([(1, null), (1, "HTTP 503: busy"), (2, null)], runs.Select(r => (r.Pass, r.Error)).Order());
+        Assert.Equal([(1, null), (1, error), (2, null)], runs.Select(r => (r.Pass, r.Error)).Order());
     }
 
     [Fact]

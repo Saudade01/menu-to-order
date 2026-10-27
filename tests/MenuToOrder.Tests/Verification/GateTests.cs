@@ -1,3 +1,4 @@
+using System.Globalization;
 using MenuToOrder.Data;
 using MenuToOrder.Extraction;
 using MenuToOrder.Verification;
@@ -119,6 +120,21 @@ public class GateTests(PostgresFixture postgres)
         Assert.IsType<ReviewOutcome.Rejected>(await review.ConfirmAsync(limonata.Id, Ct));
         Assert.IsType<ReviewOutcome.Rejected>(await review.CorrectAsync(limonata.Id, "$4", Ct));
         Assert.IsType<ReviewOutcome.Done>(await review.CorrectAsync(limonata.Id, "60", Ct));
+    }
+
+    [Fact]
+    public async Task Picking_the_reading_already_stored_is_not_counted_as_a_correction()
+    {
+        var draft = await Save("mangal-evi");
+        var flag = draft.Flags.First(f => f.Field == MenuField.Price);
+        var item = draft.Items.Single(i => i.Id == flag.MenuItemId);
+
+        await using var db = postgres.CreateDb();
+        var outcome = await new Review(db, TimeProvider.System).CorrectAsync(flag.Id, $"{item.Price!.Value.ToString(CultureInfo.InvariantCulture)} ₺", Ct);
+
+        Assert.IsType<ReviewOutcome.Done>(outcome);
+        Assert.NotNull((await db.Flags.SingleAsync(f => f.Id == flag.Id, Ct)).ResolvedAt);
+        Assert.False(await db.Corrections.AnyAsync(c => c.MenuItemId == item.Id, Ct));
     }
 
     private static VerificationGate Gate(MenuDb db) => new(db, TimeProvider.System);

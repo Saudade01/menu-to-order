@@ -40,8 +40,8 @@ accuracy is something the system measures over time.
 ## Results on the sample menus
 
 The three sample menus are rendered by `samples/render.py`, so the right answer
-for every field is known. Scored against the recorded Gemini responses, before
-the owner has touched anything:
+for every field is known. Scored against responses recorded from
+gemini-3.8-flash, before the owner has touched anything:
 
 | Menu | Dishes | Fields | Read right | Right but flagged | Ambiguous, flagged | Misread, flagged | Reached the page unflagged |
 |---|---|---|---|---|---|---|---|
@@ -61,6 +61,17 @@ is empty. These are clean renders, and real phone photos will be harder.
 
 `AccuracyTests` fails CI if a wrong or ambiguous field ever gets through
 unflagged. The generated table lives in `docs/accuracy.md`.
+
+The free tier's newest models are often too busy to answer, so the app asks
+gemini-3.6-flash first and moves on to gemini-3.5-flash and then
+gemini-3.1-flash-lite. Recording the samples on a busy evening, all six answers
+came from gemini-3.1-flash-lite. It read every price right and sent only two
+correct fields to the owner, but on Sahil Kafe both reads folded the small
+"Kaşarlı" note into the dish name, so "Köfte Kaşarlı" reached the draft without
+a question. The price was right and nothing a guest pays changed, but it shows
+the limit of the design: two reads catch a slip in one of them, not a misreading
+they share. The recordings in the repo stay the gemini-3.8-flash ones, because
+they still hold every trap the tests are built around.
 
 ## A real photo
 
@@ -85,13 +96,13 @@ normalised to NFC before it is stored.
 Reading the same board again on a busy day turned up two more. The free tier
 answered 503 often enough that one pass sometimes never came back, and with
 nothing to compare against, the owner was asked about all 132 fields. A busy
-pass is now tried twice more, and if it still has no answer nothing is saved
-and the owner is asked to read the photo again. Most of the remaining questions
-were about spelling: "TEK ANA YEMEK" against "TEK ANAYEMEK", "GAZÖZ" against
-"GAZOZ", a dotted İ. Names, sections and notes are now compared without case,
-spacing, punctuation or accents, while prices are still compared as amounts.
-On the same two answers the questions went from 13 to 2, and both left are real
-doubts about which dishes a "PORSİYON" note covers.
+pass is now tried on the next model, and if it still has no answer nothing is
+saved and the owner is asked to read the photo again. Most of the remaining
+questions were about spelling: "TEK ANA YEMEK" against "TEK ANAYEMEK", "GAZÖZ"
+against "GAZOZ", a dotted İ. Names, sections and notes are now compared without
+case, spacing, punctuation or accents, while prices are still compared as
+amounts. On the same two answers the questions went from 13 to 2, and both left
+are real doubts about which dishes a "PORSİYON" note covers.
 
 ## What it looks like
 
@@ -133,7 +144,9 @@ their own Postgres container.
 
 The `Dockerfile` builds a single image for any host. It listens on port 8080 and
 needs `ConnectionStrings__Menu`, `Gemini__ApiKey` and a volume at `/data`; without
-a key it refuses to start rather than quietly replaying the samples.
+a key it refuses to start rather than quietly replaying the samples. Each address
+can upload ten photos an hour and send thirty orders a minute, so a stranger
+cannot spend the Gemini quota or fill the owner's order list.
 
 ## Status
 

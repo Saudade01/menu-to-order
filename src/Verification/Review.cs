@@ -54,17 +54,20 @@ public sealed class Review(MenuDb db, TimeProvider time)
             if (amount is null)
                 return new ReviewOutcome.Rejected("Bu fiyat okunamadı. 180 ya da 185,50 gibi yazın.");
 
-            old = item!.Price?.ToString(CultureInfo.InvariantCulture);
+            old = item!.Price?.ToString("0.##", CultureInfo.InvariantCulture);
             item.CorrectPrice(amount.Value);
-            value = amount.Value.ToString(CultureInfo.InvariantCulture);
+            value = amount.Value.ToString("0.##", CultureInfo.InvariantCulture);
         }
         else
         {
             old = flag.Field switch { MenuField.Name => item!.Name, MenuField.Category => item!.Category, _ => item!.Description };
-            item.Correct(flag.Field, value.Trim());
+            value = value.Trim();
+            item.Correct(flag.Field, value);
         }
 
-        db.Corrections.Add(new Correction(item.Id, flag.Field, old, value, now));
+        // Picking the reading already stored confirms it; counting it as a correction would overstate the model's mistakes.
+        if ((old ?? "") != value)
+            db.Corrections.Add(new Correction(item.Id, flag.Field, old, value, now));
         // One answer settles every question about that field.
         foreach (var f in item.Flags.Where(f => f.Field == flag.Field))
             f.Resolve(now);

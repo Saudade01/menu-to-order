@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using MenuToOrder.Api.Guest;
 using MenuToOrder.Api.Intake;
 using MenuToOrder.Api.Owner;
@@ -17,6 +18,19 @@ builder.Services.AddSingleton(config.GetSection("Verification").Get<Verification
 builder.Services.AddScoped<MenuIntake>();
 builder.Services.AddScoped<VerificationGate>();
 builder.Services.AddScoped<Review>();
+
+// Every upload spends Gemini quota and every order lands on the owner's list, so one address gets only so many.
+builder.Services.AddRateLimiter(o =>
+{
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.OnRejected = (context, ct) =>
+    {
+        context.HttpContext.Response.ContentType = "text/plain; charset=utf-8";
+        return new ValueTask(context.HttpContext.Response.WriteAsync("Çok sık denendi. Lütfen biraz sonra tekrar deneyin.", ct));
+    };
+    o.AddPolicy("uploads", http => PerAddress(http, 10, TimeSpan.FromHours(1)));
+    o.AddPolicy("orders", http => PerAddress(http, 30, TimeSpan.FromMinutes(1)));
+});
 
 // Antiforgery tokens are signed with these keys; kept in memory, every restart would void every open form.
 builder.Services.AddDataProtection()
@@ -63,6 +77,7 @@ app.Use((context, next) =>
     return next();
 });
 app.UseStaticFiles();
+app.UseRateLimiter();
 app.UseAntiforgery();
 
 app.MapIntake();
@@ -71,6 +86,10 @@ app.MapGuest();
 
 app.Run();
 return 0;
+
+static RateLimitPartition<string> PerAddress(HttpContext http, int limit, TimeSpan window) =>
+    RateLimitPartition.GetFixedWindowLimiter(http.Connection.RemoteIpAddress?.ToString() ?? "",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = limit, Window = window });
 
 // Lets the HTTP tests start this app with WebApplicationFactory.
 public partial class Program;

@@ -7,7 +7,7 @@ namespace MenuToOrder.Api.Intake;
 public sealed class MenuIntake(IEnumerable<IMenuReader> readers, MenuDb db, VerificationOptions options, TimeProvider time,
     IReadOnlyList<TimeSpan>? retryDelays = null)
 {
-    private static readonly TimeSpan[] BusyRetryDelays = [TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(15)];
+    private static readonly TimeSpan[] BusyRetryDelays = [TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(30)];
     private readonly IMenuReader[] _readers = [.. readers];
 
     // Saves the draft and every model call behind it, whatever the reads returned.
@@ -40,9 +40,10 @@ public sealed class MenuIntake(IEnumerable<IMenuReader> readers, MenuDb db, Veri
         return reads;
     }
 
-    // Only Gemini saying it is busy, or the network failing, is worth another try; a bad answer is not.
+    // Only Gemini saying it is busy, sending nothing, or the network failing is worth another try; a bad answer is not.
     private static bool Busy(MenuRead read) => read.Menu is null && read.Error is { } error &&
-        (error.StartsWith("HTTP 503") || error.StartsWith("HTTP 429") || error.StartsWith("HTTP 500") || error.StartsWith("The request failed"));
+        (error.StartsWith("HTTP 503") || error.StartsWith("HTTP 429") || error.StartsWith("HTTP 500")
+            || error.StartsWith("The request failed") || error == GeminiResponse.NoText);
 
     // A read takes minutes on the free tier, so it must not depend on the owner's browser staying connected.
     // shortcut: runs inside the web process and is lost if the app stops mid-read; use a queue before deploying.

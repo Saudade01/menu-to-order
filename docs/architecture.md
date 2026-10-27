@@ -68,12 +68,13 @@ menu, which is fine because a menu is extracted once and then served on every
 order.
 
 A pass that Gemini answers with "busy" (503, 429, 500) or a network error is
-tried twice more, 5 and 15 seconds apart, and every try is logged. On the free
-tier each model runs out of capacity and daily quota on its own, so each retry
-goes to the next model in `Gemini:Models` (by default gemini-3.6-flash, then
-gemini-3.5-flash, then gemini-3.1-flash-lite). All three read the sample menus
-without letting a wrong field through unflagged; gemini-3.5-flash-lite did not,
-so it is left out. If a pass
+tried three more times, 5, 15 and 30 seconds apart, and every try is logged. On
+the free tier each model runs out of capacity and daily quota on its own, so
+each retry goes to the next model in `Gemini:Models` (by default
+gemini-3.6-flash, then gemini-3.5-flash, then gemini-3.1-flash-lite). All three
+read every price on the real whiteboard right, and gemini-3.1-flash-lite did on
+the sample menus too. The lite models sometimes fold a printed note into the
+dish name ("Köfte Kaşarlı"); when both reads do it, nothing flags it. If a pass
 still has no answer, nothing is saved: with one read there is nothing to
 compare, and asking the owner about every field of every dish is more work than
 taking the photo again.

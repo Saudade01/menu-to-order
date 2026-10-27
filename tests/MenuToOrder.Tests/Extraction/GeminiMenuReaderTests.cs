@@ -19,7 +19,7 @@ public class GeminiMenuReaderTests
 
         var read = await Reader(handler).ReadAsync(Image, pass: 2, Ct);
 
-        Assert.EndsWith("/models/gemini-3.8-flash:generateContent", handler.Request!.RequestUri!.AbsoluteUri);
+        Assert.EndsWith("/models/gemini-3.6-flash:generateContent", handler.Request!.RequestUri!.AbsoluteUri);
         Assert.Equal("test-key", handler.Request.Headers.GetValues("x-goog-api-key").Single());
         Assert.DoesNotContain("test-key", handler.Request.RequestUri.AbsoluteUri);
         using var body = JsonDocument.Parse(handler.Body);
@@ -66,7 +66,7 @@ public class GeminiMenuReaderTests
     }
 
     private static GeminiMenuReader Reader(StubHandler handler) =>
-        new(new HttpClient(handler), new GeminiOptions("test-key"), TimeProvider.System);
+        new(new HttpClient(handler), new GeminiOptions("test-key", "gemini-3.6-flash"), TimeProvider.System);
 
     private static Task<HttpResponseMessage> Respond(HttpStatusCode status, string body) =>
         Task.FromResult(new HttpResponseMessage(status) { Content = new StringContent(body) });

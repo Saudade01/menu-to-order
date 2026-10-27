@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 
 namespace MenuToOrder.Extraction;
 
-public sealed record GeminiOptions(string ApiKey, string Model = "gemini-3.8-flash");
+public sealed record GeminiOptions(string ApiKey, string Model);
 
 public sealed class GeminiMenuReader(HttpClient http, GeminiOptions options, TimeProvider time) : IMenuReader
 {

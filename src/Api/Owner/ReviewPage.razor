@@ -24,10 +24,17 @@
     else if (Items.Count == 0)
     {
         <div class="notice">
-            <p>Menü bu sefer okunamadı, hiçbir yemek kaydedilmedi. Gemini yoğun olabilir; birkaç dakika sonra fotoğrafı yeniden okutun.</p>
-            @foreach (var run in Runs.GroupBy(r => r.Pass).Where(g => g.All(r => r.Error is not null)).Select(g => g.MaxBy(r => r.StartedAt)!))
+            @if (Unanswered.Count > 0)
             {
-                <p class="reads">@(run.Pass). okuma: @run.Error</p>
+                <p>Menü bu sefer okunamadı, hiçbir yemek kaydedilmedi. Gemini yoğun olabilir; birkaç dakika sonra fotoğrafı yeniden okutun.</p>
+                @foreach (var run in Unanswered)
+                {
+                    <p class="reads">@(run.Pass). okuma: @run.Error</p>
+                }
+            }
+            else
+            {
+                <p>Fotoğraftaki yemekler okunamadı, hiçbir yemek kaydedilmedi. Menünün tamamı net görünecek şekilde yeniden çekip yükleyin.</p>
             }
             @PhotoForm
         </div>
@@ -145,6 +152,9 @@
     private bool Published => Version?.Status == MenuStatus.Published;
     private IEnumerable<Flag> Open => Items.SelectMany(i => i.Flags).Where(f => f.ResolvedAt is null);
     private int LiraQuestions => Open.Count(f => f.Reason == FlagReason.CurrencyMissing);
+    // The last error of each pass that never got an answer; a pass that got one on a retry is not shown.
+    private List<ExtractionRun> Unanswered => Runs.GroupBy(r => r.Pass).Where(g => g.All(r => r.Error is not null))
+        .Select(g => g.MaxBy(r => r.StartedAt)!).ToList();
     private int OpenFields => Open.DistinctBy(f => (f.MenuItemId, f.Field)).Count();
     private List<MenuItem> Waiting => Items.OrderBy(i => i.Position).Where(i => Questions(i).Any()).ToList();
 

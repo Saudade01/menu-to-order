@@ -4,9 +4,11 @@ namespace MenuToOrder.Extraction;
 
 internal sealed record GeminiReply(ExtractedMenu? Menu, string? Error, string? ModelVersion, int? InputTokens, int? OutputTokens);
 
-internal static class GeminiResponse
+public static class GeminiResponse
 {
-    public static GeminiReply Parse(string raw)
+    public const string NoText = "The model returned no text.";
+
+    internal static GeminiReply Parse(string raw)
     {
         JsonDocument doc;
         try
@@ -43,7 +45,12 @@ internal static class GeminiResponse
             if (finish != "STOP")
                 return Fail($"Generation stopped early ({finish ?? "no reason given"}).");
 
-            var text = string.Concat(candidate.GetProperty("content").GetProperty("parts").EnumerateArray()
+            // Gemini now and then finishes with STOP and sends no text at all.
+            if (!candidate.TryGetProperty("content", out var content) || !content.TryGetProperty("parts", out var parts)
+                || parts.ValueKind != JsonValueKind.Array)
+                return Fail(NoText);
+
+            var text = string.Concat(parts.EnumerateArray()
                 .Where(p => !(p.TryGetProperty("thought", out var t) && t.GetBoolean()))
                 .Select(p => String(p, "text")));
 

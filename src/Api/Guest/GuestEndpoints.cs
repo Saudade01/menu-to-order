@@ -53,7 +53,7 @@ public static class GuestEndpoints
             }
 
             return Receipt(slug, table, order);
-        });
+        }).RequireRateLimiting("orders");
 
         table.MapGet("/orders/{id:guid}", async (string slug, int table, Guid id, MenuDb db, CancellationToken ct) =>
         {

@@ -1,11 +1,11 @@
 <Page Title="Siparişler" RefreshSeconds="20">
     <h1>@Restaurant.Name · siparişler</h1>
-    <p class="lead">En yenisi en üstte. Sayfa 20 saniyede bir kendini yeniler.</p>
+    <p class="lead">Bugünün siparişleri, en yenisi en üstte. Sayfa 20 saniyede bir kendini yeniler.</p>
     <p><a href="/o/@Token/review">Menü</a> · <a href="/o/@Token/qr">QR kodları</a></p>
 
     @if (Orders.Count == 0)
     {
-        <p class="reads">Henüz sipariş yok.</p>
+        <p class="reads">Bugün henüz sipariş yok.</p>
     }
 
     @foreach (var order in Orders)
@@ -26,7 +26,7 @@
 </Page>
 
 @code {
-    private static readonly TimeZoneInfo Istanbul = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+    public static readonly TimeZoneInfo Istanbul = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
 
     [Parameter, EditorRequired] public string Token { get; set; } = "";
     [Parameter, EditorRequired] public Restaurant Restaurant { get; set; } = null!;

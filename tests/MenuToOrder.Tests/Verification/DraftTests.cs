@@ -86,6 +86,15 @@ public class DraftTests
     }
 
     [Fact]
+    public void A_pass_that_found_no_dishes_saves_none_either()
+    {
+        var draft = Build(Read(1, Item("Ayran", "35 ₺")), Read(2));
+
+        Assert.Empty(draft.Items);
+        Assert.Empty(draft.Flags);
+    }
+
+    [Fact]
     public void A_category_the_menu_does_not_have_is_flagged()
     {
         var invented = Item("Ayran", "35 ₺") with { Category = "KAMPANYA" };

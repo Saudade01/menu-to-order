@@ -17,8 +17,10 @@ public static partial class Drafts
     {
         var version = new MenuVersion(restaurantId, now);
         var runs = new[] { Run(version, first), Run(version, second) };
-        // One read alone cannot be cross-checked, and handing the owner every field of every dish is worse than reading again.
-        var pairs = first.Menu is null || second.Menu is null ? [] : Pair(first.Menu.Items, second.Menu.Items);
+        // One read alone, or a read that found no dishes, cannot be cross-checked, and handing the owner
+        // every field of every dish is worse than reading again.
+        var pairs = first.Menu is not { Items.Count: > 0 } || second.Menu is not { Items.Count: > 0 }
+            ? [] : Pair(first.Menu.Items, second.Menu.Items);
 
         var detected = (first.Menu?.Categories ?? []).Concat(second.Menu?.Categories ?? []).Select(Key).ToHashSet();
         var nameCounts = pairs.Select(p => (p.First ?? p.Second)!).CountBy(v => (Key(v.Category), Key(v.Name))).ToDictionary();

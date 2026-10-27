@@ -62,6 +62,17 @@ public class GeminiResponseTests
         Assert.Contains("MAX_TOKENS", reply.Error);
     }
 
+    [Theory]
+    [InlineData("""{"candidates":[{"content":{"role":"model"},"finishReason":"STOP"}]}""")]
+    [InlineData("""{"candidates":[{"finishReason":"STOP"}]}""")]
+    public void A_finished_answer_without_text_is_an_error_not_a_crash(string raw)
+    {
+        var reply = GeminiResponse.Parse(raw);
+
+        Assert.Null(reply.Menu);
+        Assert.Equal(GeminiResponse.NoText, reply.Error);
+    }
+
     [Fact]
     public void Output_missing_a_required_field_is_rejected()
     {

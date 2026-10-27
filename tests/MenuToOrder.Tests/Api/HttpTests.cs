@@ -139,6 +139,65 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
         Assert.DoesNotContain("2. okuma", page);
     }
 
+    [Fact]
+    public async Task A_photo_with_no_dishes_on_it_is_not_blamed_on_gemini()
+    {
+        var client = Client();
+        var (owner, restaurant) = await Upload(client, "kose-lokantasi");
+
+        var at = DateTimeOffset.UtcNow.AddMinutes(1);
+        MenuRead Empty(int pass) => new(pass, "p", "m", "h", "{}", new ExtractedMenu([], []), null, TimeSpan.Zero, null, null, at);
+        var draft = Drafts.Build(restaurant.Id, Empty(1), Empty(2), new VerificationOptions(), at);
+        await using (var db = postgres.CreateDb())
+        {
+            db.Add(draft.Version);
+            db.AddRange(draft.Runs);
+            await db.SaveChangesAsync(Ct);
+        }
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync($"{owner}/review", Ct));
+
+        Assert.Contains("Fotoğraftaki yemekler okunamadı", page);
+        Assert.DoesNotContain("Gemini", page);
+    }
+
+    [Fact]
+    public async Task The_order_list_holds_every_order_of_the_day_and_nothing_older()
+    {
+        var client = Client();
+        var (owner, restaurant) = await Upload(client, "kose-lokantasi");
+        await Post(client, $"{owner}/publish", []);
+        await using (var db = postgres.CreateDb())
+        {
+            var menu = await db.MenuVersions.Include(v => v.Items).SingleAsync(v => v.RestaurantId == restaurant.Id, Ct);
+            var now = DateTimeOffset.UtcNow;
+            db.Orders.AddRange(Enumerable.Range(0, 101).Select(_ => new Order(restaurant.Id, menu.Id, 1, null, [(menu.Items[0], 1)], now)));
+            db.Orders.Add(new Order(restaurant.Id, menu.Id, 2, null, [(menu.Items[0], 1)], now.AddDays(-2)));
+            await db.SaveChangesAsync(Ct);
+        }
+
+        var page = await client.GetStringAsync($"{owner}/orders", Ct);
+
+        Assert.Equal(101, Regex.Count(page, "<strong>Masa 1</strong>"));
+        Assert.DoesNotContain("<strong>Masa 2</strong>", page);
+    }
+
+    [Fact]
+    public async Task One_address_cannot_keep_uploading_menus()
+    {
+        var client = Client();
+        var token = Token(await client.GetStringAsync("/", Ct));
+        var statuses = new List<HttpStatusCode>();
+        for (var i = 0; i < 11; i++)
+        {
+            using var form = new MultipartFormDataContent { { new StringContent(token), "__RequestVerificationToken" }, { new StringContent(""), "name" } };
+            statuses.Add((await client.PostAsync("/restaurants", form, Ct)).StatusCode);
+        }
+
+        Assert.All(statuses[..10], s => Assert.Equal(HttpStatusCode.BadRequest, s));
+        Assert.Equal(HttpStatusCode.TooManyRequests, statuses[10]);
+    }
+
     // A published menu and a reviewed cart, ready to be sent as an order.
     private async Task<(Restaurant Restaurant, string Table, (string, string)[] Order)> Cart(HttpClient client)
     {

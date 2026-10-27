@@ -23,11 +23,11 @@ public static class OwnerEndpoints
             var version = await Latest(db, restaurant.Id, ct);
             var runs = version is null ? [] : await db.ExtractionRuns.Where(r => r.MenuVersionId == version.Id).OrderBy(r => r.Pass).ToListAsync(ct);
 
-            // A read is under way until a version newer than the upload shows up. Each pass makes up to three
-            // tries of three minutes, so a read still missing after ten has failed outright.
+            // A read is under way until a version newer than the upload shows up. Each pass makes up to four
+            // tries of three minutes, so a read still missing after fifteen has failed outright.
             var uploaded = since is { } s ? DateTimeOffset.FromUnixTimeSeconds(s) : restaurant.CreatedAt;
             var reading = version is null || version.CreatedAt < uploaded;
-            var stalled = reading && time.GetUtcNow() - uploaded > TimeSpan.FromMinutes(10);
+            var stalled = reading && time.GetUtcNow() - uploaded > TimeSpan.FromMinutes(15);
 
             return new RazorComponentResult<ReviewPage>(new
             {
@@ -49,7 +49,7 @@ public static class OwnerEndpoints
             var since = time.GetUtcNow().ToUnixTimeSeconds();
             MenuIntake.Start(services, restaurant.Id, image);
             return Results.Redirect($"/o/{token}/review?since={since}");
-        });
+        }).RequireRateLimiting("uploads");
 
         owner.MapPost("/flags/{id:guid}", async (string token, Guid id, [FromForm] string? action, [FromForm] string? value,
             MenuDb db, Review review, CancellationToken ct) =>
@@ -90,15 +90,17 @@ public static class OwnerEndpoints
             };
         });
 
-        owner.MapGet("/orders", async (string token, MenuDb db, CancellationToken ct) =>
+        owner.MapGet("/orders", async (string token, MenuDb db, TimeProvider time, CancellationToken ct) =>
         {
             if (await db.FindOwnerAsync(token, ct) is not { } restaurant)
                 return Results.NotFound();
 
+            // The owner settles up by the day, so the list holds every order since midnight in Istanbul.
+            var now = TimeZoneInfo.ConvertTime(time.GetUtcNow(), OrdersPage.Istanbul);
+            var midnight = new DateTimeOffset(now.Date, now.Offset).ToUniversalTime();
             var orders = await db.Orders.Include(o => o.Lines.OrderBy(l => l.Position))
-                .Where(o => o.RestaurantId == restaurant.Id)
+                .Where(o => o.RestaurantId == restaurant.Id && o.CreatedAt >= midnight)
                 .OrderByDescending(o => o.CreatedAt)
-                .Take(100)
                 .ToListAsync(ct);
             return new RazorComponentResult<OrdersPage>(new { Token = token, Restaurant = restaurant, Orders = orders });
         });
