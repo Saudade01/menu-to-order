@@ -4,10 +4,11 @@ using MenuToOrder.Verification;
 
 namespace MenuToOrder.Api.Intake;
 
-public sealed class MenuIntake(IMenuReader reader, MenuDb db, VerificationOptions options, TimeProvider time,
+public sealed class MenuIntake(IEnumerable<IMenuReader> readers, MenuDb db, VerificationOptions options, TimeProvider time,
     IReadOnlyList<TimeSpan>? retryDelays = null)
 {
     private static readonly TimeSpan[] BusyRetryDelays = [TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(15)];
+    private readonly IMenuReader[] _readers = [.. readers];
 
     // Saves the draft and every model call behind it, whatever the reads returned.
     public async Task<MenuDraft> ReadAsync(Guid restaurantId, MenuImage image, CancellationToken ct)
@@ -26,13 +27,14 @@ public sealed class MenuIntake(IMenuReader reader, MenuDb db, VerificationOption
 
     private async Task<List<MenuRead>> Attempts(MenuImage image, int pass, CancellationToken ct)
     {
-        var reads = new List<MenuRead> { await reader.ReadAsync(image, pass, ct) };
+        var reads = new List<MenuRead> { await _readers[0].ReadAsync(image, pass, ct) };
         foreach (var delay in retryDelays ?? BusyRetryDelays)
         {
             if (!Busy(reads[^1]))
                 break;
             await Task.Delay(delay, ct);
-            reads.Add(await reader.ReadAsync(image, pass, ct));
+            // A busy model tends to stay busy for a while, so each retry goes to the next model, staying on the last.
+            reads.Add(await _readers[Math.Min(reads.Count, _readers.Length - 1)].ReadAsync(image, pass, ct));
         }
 
         return reads;
