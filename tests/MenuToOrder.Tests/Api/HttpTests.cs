@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using MenuToOrder.Api.Shared;
 using MenuToOrder.Data;
@@ -88,11 +89,12 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Scripts_are_checked_for_updates_on_every_load()
+    public async Task A_script_link_changes_whenever_the_script_does()
     {
-        var response = await Client().GetAsync("/menu.js", Ct);
+        var page = await Client().GetStringAsync("/", Ct);
 
-        Assert.True(response.Headers.CacheControl?.NoCache);
+        var hash = Convert.ToHexStringLower(SHA256.HashData(await File.ReadAllBytesAsync(Repo.At("src", "Api", "wwwroot", "site.js"), Ct)));
+        Assert.Contains($"/site.js?v={hash[..8]}", page);
     }
 
     [Fact]
@@ -237,6 +239,18 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
         var page = WebUtility.HtmlDecode(await client.GetStringAsync($"{owner}/review", Ct));
 
         Assert.Contains("2 konuda onayınız gerekiyor", page);
+        Assert.DoesNotContain("yemekte aynı soru", page);
+    }
+
+    [Fact]
+    public async Task Two_dishes_sharing_a_name_are_asked_one_by_one()
+    {
+        var client = Client();
+        var (owner, _) = await Upload(client, "sahil-kafe");
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync($"{owner}/review", Ct));
+
+        Assert.Contains("bu bölümde aynı isim iki kez geçiyor", page);
         Assert.DoesNotContain("yemekte aynı soru", page);
     }
 

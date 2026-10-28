@@ -148,8 +148,10 @@
         .SelectMany(i => Questions(i).Select(g => new Question(i, g.Key, g.ToList()))).ToList();
 
     // The same doubt on several dishes, such as a heading one read saw and the other did not, is asked once.
-    // Prices are never answered in bulk: each one is money on its own dish.
-    private List<List<Question>> Shared => _shared ??= AllQuestions.Where(q => q.Field != MenuField.Price)
+    // Prices are never answered in bulk: each one is money on its own dish. Nor are two dishes sharing a name,
+    // since one answer for both would leave them sharing it.
+    private List<List<Question>> Shared => _shared ??= AllQuestions
+        .Where(q => q.Field != MenuField.Price && q.Flags.All(f => f.Reason != FlagReason.DuplicateName))
         .GroupBy(q => (q.Field, q.Flags[0].FirstPassValue, q.Flags[0].SecondPassValue, string.Join(",", q.Flags.Select(f => f.Reason).Order())))
         .Where(g => g.Count() > 1).Select(g => g.ToList()).ToList();
 

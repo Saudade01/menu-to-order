@@ -1,3 +1,5 @@
+@using System.Collections.Concurrent
+@using System.Security.Cryptography
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -8,11 +10,11 @@
     {
         <meta http-equiv="refresh" content="@seconds" />
     }
-    <link rel="stylesheet" href="/site.css" />
-    <script src="/site.js" defer></script>
+    <link rel="stylesheet" href="@Versioned("/site.css")" />
+    <script src="@Versioned("/site.js")" defer></script>
     @if (Script is not null)
     {
-        <script src="@Script" defer></script>
+        <script src="@Versioned(Script)" defer></script>
     }
 </head>
 <body>
@@ -21,8 +23,15 @@
 </html>
 
 @code {
+    private static readonly ConcurrentDictionary<string, string> Versions = new();
+
+    [Inject] private IWebHostEnvironment Env { get; set; } = null!;
     [Parameter] public string Title { get; set; } = "";
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public int? RefreshSeconds { get; set; }
     [Parameter] public string? Script { get; set; }
+
+    // The URL carries a hash of the file, so a phone holding an older copy fetches the new one after an update.
+    private string Versioned(string path) => Versions.GetOrAdd(path, p =>
+        $"{p}?v={Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(Path.Combine(Env.WebRootPath, p.TrimStart('/')))))[..8]}");
 }
