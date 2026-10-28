@@ -185,3 +185,6 @@ section[id] { scroll-margin-top: 64px; }
     body { background: #fff; }
     .qr figure { box-shadow: none; }
 }
+
+.picked { display: flex; flex-basis: 100%; align-items: center; gap: 12px; margin: 8px 0; }
+.picked img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
