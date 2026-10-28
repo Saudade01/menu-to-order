@@ -65,10 +65,16 @@ button {
     background: var(--ink);
     color: #fff;
     cursor: pointer;
+    /* Quick taps on + must count, not zoom the page; pinch zoom still works. */
+    touch-action: manipulation;
 }
-button:hover { background: #3a332b; }
 button.quiet { background: var(--card); color: var(--ink); border-color: var(--line); }
-button.quiet:hover { border-color: var(--ink); }
+/* Only for a real pointer: on a phone a hover style sticks to the last button tapped. */
+@media (hover: hover) {
+    button:hover { background: #3a332b; }
+    button.quiet:hover, .step:hover { background: var(--card); border-color: var(--ink); }
+    .checkout button:hover { background: #a94822; }
+}
 button:disabled { opacity: .4; cursor: not-allowed; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .row input { flex: 1 1 180px; }
@@ -166,7 +172,6 @@ section[id] { scroll-margin-top: 64px; }
     border-top: 1px solid var(--line);
 }
 .checkout button { width: 100%; padding: 15px; border-radius: 999px; background: var(--accent); border-color: var(--accent); }
-.checkout button:hover { background: #a94822; }
 
 /* QR cards */
 .qr { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
