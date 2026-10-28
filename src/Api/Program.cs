@@ -76,7 +76,8 @@ app.Use((context, next) =>
     context.Response.Headers["Referrer-Policy"] = "no-referrer";
     return next();
 });
-app.UseStaticFiles();
+// Phones would otherwise keep running an old site.js or menu.js after an update; no-cache still reuses an unchanged file after a quick check.
+app.UseStaticFiles(new StaticFileOptions { OnPrepareResponse = c => c.Context.Response.Headers.CacheControl = "no-cache" });
 app.UseRateLimiter();
 app.UseAntiforgery();
 

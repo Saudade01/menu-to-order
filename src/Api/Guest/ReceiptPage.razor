@@ -1,6 +1,6 @@
-<Page Title="Sipariş alındı">
+<Page Title="Sipariş alındı" Script="/menu.js">
     <h1>Siparişiniz alındı</h1>
-    <p class="notice ok">Siparişiniz iletildi: @Restaurant.Name, masa @Order.TableNumber.</p>
+    <p class="notice ok" data-placed="@Order.MenuVersionId">Siparişiniz iletildi: @Restaurant.Name, masa @Order.TableNumber.</p>
 
     @foreach (var line in Order.Lines)
     {

@@ -208,7 +208,7 @@
 
     private RenderFragment PhotoForm => @<form method="post" action="/o/@Token/photo" enctype="multipart/form-data" class="row">
         <AntiforgeryToken />
-        <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" capture="environment" required aria-label="Menünün fotoğrafı" />
+        <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required aria-label="Menünün fotoğrafı" />
         <button type="submit">Yeniden oku</button>
     </form>;
 

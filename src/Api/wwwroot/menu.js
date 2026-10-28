@@ -1,12 +1,29 @@
 // Display only: the server prices every order from the published menu, whatever this script shows.
 document.documentElement.classList.add("js");
 
+// A placed order empties the cart kept for its menu.
+const placed = document.querySelector("[data-placed]");
+if (placed) try { sessionStorage.removeItem("cart:" + placed.dataset.placed); } catch { }
+
 const form = document.querySelector("form[data-cart]");
 if (form) {
     const lira = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 });
     const total = form.querySelector("[data-cart-total]");
     const fields = [...form.querySelectorAll("input.qty")];
     const clamp = value => Math.min(20, Math.max(0, parseInt(value, 10) || 0));
+
+    // The cart is kept in this tab too, so a reload, or an in-app browser that reloads on a tab tap, does not empty it.
+    const key = "cart:" + form.elements.menu.value;
+    try {
+        const kept = JSON.parse(sessionStorage.getItem(key) ?? "{}");
+        for (const field of fields) if (kept[field.name]) field.value = clamp(kept[field.name]);
+        if (kept.note) form.elements.note.value = kept.note;
+    } catch { }
+    const save = () => {
+        const kept = Object.fromEntries(fields.filter(f => clamp(f.value) > 0).map(f => [f.name, clamp(f.value)]));
+        if (form.elements.note.value) kept.note = form.elements.note.value;
+        try { sessionStorage.setItem(key, JSON.stringify(kept)); } catch { }
+    };
 
     const update = () => {
         let count = 0, sum = 0;
@@ -17,6 +34,7 @@ if (form) {
             sum += clamp(field.value) * Number(field.dataset.price);
         }
         total.textContent = count ? `Sepet · ${count} ürün · ${lira.format(sum)} ₺` : "Siparişi gözden geçir";
+        save();
     };
 
     form.addEventListener("click", event => {
@@ -29,6 +47,14 @@ if (form) {
     });
     form.addEventListener("input", update);
     update();
+
+    // Scrolled in place rather than followed as a link, since some in-app browsers reload the page on "#section".
+    document.querySelector(".tabs")?.addEventListener("click", event => {
+        const tab = event.target.closest("a");
+        if (!tab) return;
+        event.preventDefault();
+        document.getElementById(tab.hash.slice(1))?.scrollIntoView();
+    });
 
     const tabs = new Map([...document.querySelectorAll(".tabs a")].map(a => [a.hash.slice(1), a]));
     const watch = new IntersectionObserver(entries => {

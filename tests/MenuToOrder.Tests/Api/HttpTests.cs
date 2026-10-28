@@ -88,6 +88,14 @@ public partial class HttpTests(PostgresFixture postgres) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Scripts_are_checked_for_updates_on_every_load()
+    {
+        var response = await Client().GetAsync("/menu.js", Ct);
+
+        Assert.True(response.Headers.CacheControl?.NoCache);
+    }
+
+    [Fact]
     public async Task A_form_sent_without_the_antiforgery_token_is_refused()
     {
         using var form = new MultipartFormDataContent { { new StringContent("Sahte"), "name" }, { new StringContent("2"), "tables" } };
