@@ -2,13 +2,29 @@
 
 [![ci](https://github.com/Saudade01/menu-to-order/actions/workflows/ci.yml/badge.svg)](https://github.com/Saudade01/menu-to-order/actions/workflows/ci.yml)
 
-Turn a photo of a paper menu into a working QR order page.
+Turn a photo of a paper menu into a QR order page that guests use from their table.
 
-A restaurant owner photographs the printed menu, the service reads it, and a
-couple of minutes later the owner has an ordering page without typing anything in.
+1. The owner uploads one photo of the printed menu, or of the board by the door.
+2. The app reads the menu twice and asks the owner about whatever the two reads
+   disagree on or whatever looks wrong. It never guesses a price.
+3. Each table gets its own QR code. Guests order from their phones, and the
+   owner sees every order with its table and note.
 
-Reading the menu is the easy part. Most of this codebase deals with the cases
-where the model reads it wrong.
+| Owner review | Table menu on a phone | Incoming orders |
+|---|---|---|
+| ![Owner review page with flagged fields](docs/screenshots/review.png) | ![Table 4 menu on a phone](docs/screenshots/menu.png) | ![Owner order list](docs/screenshots/orders.png) |
+
+The interface is in Turkish, for the cafés and lokantas it was built for.
+
+## Why it exists
+
+Plenty of cafés and lokantas have a printed menu and nothing else. Putting it
+online usually means typing in every dish and price, and a typo in a price
+costs money on every order until someone spots it. Here nobody retypes the
+menu, and nothing goes live that the owner has not had the chance to check.
+
+The rest of this page is for developers. Reading the menu is the easy part;
+most of the code deals with the cases where the model reads it wrong.
 
 ## Why model mistakes matter here
 
@@ -105,13 +121,30 @@ case, spacing, punctuation or accents, while prices are still compared as
 amounts. On the same two answers the questions went from 13 to 2, and both left
 are real doubts about which dishes a "PORSİYON" note covers.
 
-## What it looks like
+## On a real phone
 
-The interface is in Turkish, for the owners and guests it is built for.
+Testing on an iPhone, with the menu opened from the Google app, found three
+more:
 
-| Owner review | Table menu on a phone | Incoming orders |
-|---|---|---|
-| ![Owner review page with flagged fields](docs/screenshots/review.png) | ![Table 4 menu on a phone](docs/screenshots/menu.png) | ![Owner order list](docs/screenshots/orders.png) |
+- The Google app's own browser silently drops every form post, so no answer,
+  publish or order reached the server. Forms are now sent with fetch, and still
+  work as plain forms without JavaScript.
+- In that browser, tapping a section tab reloaded the page and emptied the
+  cart. Tabs now scroll in place, and the cart is kept in the tab until the
+  order is placed.
+- A phone photo records where it was taken. It is now redrawn in the browser
+  before upload, which drops the location, keeps the photo upright and shrinks
+  it.
+
+## Where to start reading
+
+- `src/Verification/MenuDraft.cs` pairs the two reads and decides what to ask.
+- `src/Verification/VerificationGate.cs` is the only code that can publish a menu.
+- `src/Api/Intake/MenuIntake.cs` reads in the background, moves a busy read on
+  to the next model and logs every call.
+- `tests/MenuToOrder.Tests/Verification/AccuracyTests.cs` scores the drafts
+  against the known answers and fails CI if a wrong field gets through.
+- `docs/architecture.md` covers the design and the reasons behind it.
 
 ## Stack
 
@@ -121,6 +154,7 @@ The interface is in Turkish, for the owners and guests it is built for.
 | Data | PostgreSQL + Entity Framework Core |
 | Vision / extraction | Gemini Flash |
 | Order page | Server-rendered Razor components |
+| Tests | xUnit, Testcontainers (real PostgreSQL), recorded Gemini responses |
 | Local dev | Docker Compose (Postgres) |
 
 ## Run it locally
@@ -151,19 +185,6 @@ cannot spend the Gemini quota or fill the owner's order list.
 
 ## Status
 
-The whole path works locally: upload, review, publishing, per-table QR codes, and
-ordering from the table page with the total worked out on the server from the
-published prices. The design is in `docs/architecture.md`.
-
-## Why it exists
-
-To get a small restaurant's menu online without anyone retyping it, and without
-a wrong price slipping through.
-
-Plenty of cafés and lokantas have a printed menu and nothing else. Putting it
-online usually means entering every dish and price by hand, and a typo in a
-price costs money on every order until someone spots it. Here the owner takes
-one photo, answers the few questions the system is unsure about, and prints a
-QR code for each table. Guests order from their phones, the owner sees each
-order with its table and note, and nothing goes live that the owner has not had
-the chance to check.
+The whole path works locally and has been tested end to end on an iPhone:
+upload, review, publishing, per-table QR codes, and ordering from the table page
+with the total worked out on the server from the published prices.
